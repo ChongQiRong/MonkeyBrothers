@@ -60,10 +60,10 @@ contract ERC20 {
     mapping (address => mapping (address => uint256)) internal allowed;
     mapping(address => uint256) balances;
     
-    string public constant name = "DiceToken";
-    string public constant symbol = "DT";
+    string public constant name = "MonkeyToken";
+    string public constant symbol = "Monks";
     uint8 public constant decimals = 18;
-    uint256 public constant initialSupply = 10000 * 10**uint256(decimals); //10000 DT tokens
+    uint256 public constant initialSupply = 10000 * 10**uint256(decimals); //10000 Monks
     uint256 public constant pricePerToken = 10000000000000000; //in wei == 10000000 gwei == 10 finney == 0.01ether
     uint256 private totalSupply_;
     
@@ -194,9 +194,9 @@ contract ERC20 {
     _;
   }
     
-  //Anyone can top up DT, with the price of 0.01 Eth per DT
-  //When the supply is not enough (e.g., someone wants to top up 200DT, but there is 
-  //only 100DT left in supply), return with error message “DT supply is not enough”.
+  //Anyone can top up Monk, with the price of 0.01 Eth per Monk
+  //When the supply is not enough (e.g., someone wants to top up 200 Monk, but there is 
+  //only 100 Monk left in supply), return with error message “DT supply is not enough”.
   function purchaseTokens() public payable {
     uint256 weiAmount = msg.value;
     require(weiAmount >= pricePerToken, "You need to send at least 0.01 ether");
@@ -204,7 +204,7 @@ contract ERC20 {
     uint256 tokens = weiAmount.div(pricePerToken);
     uint256 cost = tokens.mul(pricePerToken);
     
-    require(balances[owner] >= tokens, "DT supply is not enough");
+    require(balances[owner] >= tokens, "Monk supply is not enough");
 
     balances[owner] = balances[owner].sub(tokens);
     balances[msg.sender] = balances[msg.sender].add(tokens);
