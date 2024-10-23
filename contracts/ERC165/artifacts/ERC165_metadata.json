@@ -1,0 +1,77 @@
+{
+	"compiler": {
+		"version": "0.8.26+commit.8a97fa7a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "bytes4",
+						"name": "interfaceId",
+						"type": "bytes4"
+					}
+				],
+				"name": "supportsInterface",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {
+				"supportsInterface(bytes4)": {
+					"details": "See {IERC165-supportsInterface}."
+				}
+			},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/ERC165/ERC165.sol": "ERC165"
+		},
+		"evmVersion": "cancun",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/ERC165/ERC165.sol": {
+			"keccak256": "0x0cf721450cc7884632f0820041c23e80d6765d3e6792baece463c7924361aafc",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://dd7200284c89ac890e586c8aa41c625653d25cfffb58053ff2f039ed82c829eb",
+				"dweb:/ipfs/QmNwAtH4zZnfiVSVTKjrC2boXMgMZsDUwTpKB6aNWQ6dqv"
+			]
+		},
+		"contracts/ERC165/IERC165.sol": {
+			"keccak256": "0xaba1d3b9d5e824baede3ad0be9c42ec8d34cee71df8ae63f70aefd5bbbab09de",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://85c9cb563f933c642a2e0037a39f6962f0dc1a4811e3a6d130cb7317bacf1bd1",
+				"dweb:/ipfs/QmXUoks1MtXQ28bnh4pSGnwW1ewNyyFyxifzydyWgi66Sf"
+			]
+		}
+	},
+	"version": 1
+}
