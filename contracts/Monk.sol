@@ -1,221 +1,91 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
 
-//first need to approve the address of spender 
-//Check the allowance
-//Finally able to call transferFrom to transfer tokens
+import "./ERC20.sol"; 
 
 /**
- * @title SafeMath
- * @dev Math operations with safety checks that throw on error
+ * @title Monk
+ * @dev Monk is the ERC20 token used for Monkey Brothers
  */
-library SafeMath {
-
-  /**
-  * @dev Multiplies two numbers, throws on overflow.
-  */
-  function mul(uint256 a, uint256 b) internal pure returns (uint256 c) {
-    if (a == 0) {
-      return 0;
-    }
-    c = a * b;
-    assert(c / a == b);
-    return c;
-  }
-
-  /**
-  * @dev Integer division of two numbers, truncating the quotient.
-  */
-  function div(uint256 a, uint256 b) internal pure returns (uint256) {
-    // assert(b > 0); // Solidity automatically throws when dividing by 0
-    // uint256 c = a / b;
-    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-    return a / b;
-  }
-
-  /**
-  * @dev Subtracts two numbers, throws on overflow (i.e. if subtrahend is greater than minuend).
-  */
-  function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-    assert(b <= a);
-    return a - b;
-  }
-
-  /**
-  * @dev Adds two numbers, throws on overflow.
-  */
-  function add(uint256 a, uint256 b) internal pure returns (uint256 c) {
-    c = a + b;
-    assert(c >= a);
-    return c;
-  }
-}
-
-contract ERC20 {
-    using SafeMath for uint256;
+contract Monk is ERC20("MONK", "MK") {
+    uint256 supplyLimit;
+    uint256 currentSupply;
+    address owner;
     
-    bool public mintingFinished = false;
-    
-    address public owner = msg.sender;
-    
-    mapping (address => mapping (address => uint256)) internal allowed;
-    mapping(address => uint256) balances;
-    
-    string public constant name = "MonkeyToken";
-    string public constant symbol = "Monks";
-    uint8 public constant decimals = 18;
-    uint256 public constant initialSupply = 10000 * 10**uint256(decimals); //10000 Monks
-    uint256 public constant pricePerToken = 10000000000000000; //in wei == 10000000 gwei == 10 finney == 0.01ether
-    uint256 private totalSupply_;
-    
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-    event TokensPurchased(address buyer, uint256 amountOfDT);
-    event Mint(address indexed to, uint256 amount);
-    event MintFinished();
-
-    constructor() public {
-        totalSupply_ = initialSupply;
-        balances[owner] = initialSupply; //Contract owner owns all supply at the start\
-        emit Transfer(msg.sender, msg.sender, initialSupply);
-    }
-
-  /**
-  * @dev total number of tokens in existence
-  */
-  function totalSupply() public view returns (uint256) {
-    return totalSupply_;
-  }
-  
     /**
-  * @dev Gets the balance of the specified address.
-  * @param _owner The address to query the the balance of.
-  * @return An uint256 representing the amount owned by the passed address.
-  */
-  function balanceOf(address _owner) public view returns (uint256) {
-    return balances[_owner];
-  }
-
-
-  /**
-  * @dev transfer token for a specified address
-  * @param _to The address to transfer to.
-  * @param _value The amount to be transferred.
-  */
-  function transfer(address _to, uint256 _value) public returns (bool) {
-    require(_to != address(0));
-    require(_value <= balances[tx.origin], "msg.sender doesn't have enough balance");
-
-    balances[tx.origin] = balances[tx.origin].sub(_value);
-    balances[_to] = balances[_to].add(_value);
-    emit Transfer(tx.origin, _to, _value);
-    return true;
-  }
-
-  /**
-   * @dev Transfer tokens from one address to another
-   * @param _from address The address which you want to send tokens from
-   * @param _to address The address which you want to transfer to
-   * @param _value uint256 the amount of tokens to be transferred
-   */
-  function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
-    require(_to != address(0));
-    require(_value <= balances[_from], "From doesn't have enough balance");
-    require(_value <= allowed[_from][tx.origin], "Not allowed to spend this much");
-
-    balances[_from] = balances[_from].sub(_value);
-    balances[_to] = balances[_to].add(_value);
-    allowed[_from][tx.origin] = allowed[_from][tx.origin].sub(_value);
-    emit Transfer(_from, _to, _value);
-    return true;
-  }
-
-  /**
-   * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
-   *
-   * Beware that changing an allowance with this method brings the risk that someone may use both the old
-   * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
-   * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
-   * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-   * @param _spender The address which will spend the funds.
-   * @param _value The amount of tokens to be spent.
-   */
-  function approve(address _spender, uint256 _value) public returns (bool) {
-    allowed[msg.sender][_spender] = _value;
-    emit Approval(msg.sender, _spender, _value);
-    return true;
-  }
-
-  /**
-   * @dev Function to check the amount of tokens that an owner allowed to a spender.
-   * @param _owner address The address which owns the funds.
-   * @param _spender address The address which will spend the funds.
-   * @return A uint256 specifying the amount of tokens still available for the spender.
-   */
-  function allowance(address _owner, address _spender) public view returns (uint256) {
-    return allowed[_owner][_spender];
-  }
-  
-  
-    /**
-   * @dev Function to mint tokens
-   * @param _to The address that will receive the minted tokens.
-   * @param _amount The amount of tokens to mint.
-   * @return A boolean that indicates if the operation was successful.
-   */
-  function mint(address _to, uint256 _amount) onlyOwner canMint public returns (bool) {
-    totalSupply_ = totalSupply_.add(_amount);
-    balances[_to] = balances[_to].add(_amount);
-    emit Mint(_to, _amount);
-    emit Transfer(address(0), _to, _amount);
-    return true;
-  }
-
-  /**
-   * @dev Function to stop minting new tokens.
-   * @return True if the operation was successful.
-   */
-  function finishMinting() onlyOwner canMint public returns (bool) {
-    mintingFinished = true;
-    emit MintFinished();
-    return true;
-  }
-  
-  function getOwner() public view returns (address){
-      return owner;
-  }
-  
-   modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
-  }
-  
-  modifier canMint() {
-    require(!mintingFinished);
-    _;
-  }
-    
-  //Anyone can top up Monk, with the price of 0.01 Eth per Monk
-  //When the supply is not enough (e.g., someone wants to top up 200 Monk, but there is 
-  //only 100 Monk left in supply), return with error message “DT supply is not enough”.
-  function purchaseTokens() public payable {
-    uint256 weiAmount = msg.value;
-    require(weiAmount >= pricePerToken, "You need to send at least 0.01 ether");
-    
-    uint256 tokens = weiAmount.div(pricePerToken);
-    uint256 cost = tokens.mul(pricePerToken);
-    
-    require(balances[owner] >= tokens, "Monk supply is not enough");
-
-    balances[owner] = balances[owner].sub(tokens);
-    balances[msg.sender] = balances[msg.sender].add(tokens);
-
-    emit Transfer(owner, msg.sender, tokens);
-    emit TokensPurchased(msg.sender, tokens);
-
-    uint256 weiToReturn = weiAmount.sub(cost);
-    if (weiToReturn > 0) {
-        msg.sender.transfer(weiToReturn);
+     * @dev Sets the values for owner of the contract and supply limit
+     */
+    constructor() {
+        owner = msg.sender;
+        supplyLimit = 1000000 * 1000000000000000000;
     }
-  }
 
+    /**
+     * @dev Mints Monks with ETH
+     */
+    function getMonks() public payable {
+        uint256 amt = msg.value * 1000;
+        require(totalSupply() + amt < supplyLimit, "Warning: Insufficient Monks!");
+        _mint(msg.sender, amt);
+    }
+
+    /**
+     * @dev Getter for amount of Monks held by the caller of the function
+     */
+    function checkMonks() public view returns (uint256) {
+        return balanceOf(msg.sender) / 1000000000000000000;
+    }
+
+    /**
+     * @dev Getter for amount of Monks held by an address
+     * @param user Address of user of interest
+     */
+    function checkMonksOf(address user) public view returns (uint256) {
+        return balanceOf(user) / 1000000000000000000;
+    }
+
+    /**
+     * @dev Transfer Monks from function caller to recipient
+     * @param recipient Address of recipient
+     * @param value Amount of Monks to transfer
+     */
+    function transferMonks(address recipient, uint256 value) public returns (bool) {
+        return transfer(recipient, value * 1000000000000000000);
+    }
+
+    /**
+     * @dev Transfer Monks from an address to another address
+     * @param from Address of sender
+     * @param to Address of recipient
+     * @param amt Amount of Monks to transfer
+     */
+    function transferMonksFrom(address from, address to, uint256 amt) public {
+        require(allowance(from, msg.sender) > amt * 1000000000000000000, "Warning: You are not allowed to transfer!");
+        transferFrom(from, to, amt * 1000000000000000000);
+    }
+
+    /**
+     * @dev Give an address approval to transfer a specified amount of Monks
+     * @param recipient Address to be given approval
+     * @param amt Amount of Monks to be approved to the address
+     */
+    function giveMonkApproval(address recipient, uint256 amt) public {
+        approve(recipient, amt * 1000000000000000000);
+    }
+
+    /**
+     * @dev Check allowance given to spender by the user
+     * @param user Address of the owner of the Monks
+     * @param spender Address of the spender of the Monks
+     */
+    function checkMonkAllowance(address user, address spender) public view returns (uint256) {
+        return allowance(user, spender) / 1000000000000000000;
+    }
+
+    /**
+     * @dev Track current total Monk supply
+     */
+    function currentMonkSupply() public view returns (uint256) {
+        return totalSupply() / 1000000000000000000;
+    }
 }
