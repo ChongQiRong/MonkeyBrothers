@@ -5,14 +5,19 @@ import "./ERC165/ERC165.sol";
 import "../contracts/ERC721/IERC721.sol";
 import "../contracts/ERC721/IERC721Metadata.sol";
 import "../contracts/ERC721/IERC721Receiver.sol";
+import "./Ownable.sol";
 
-contract Monkeys is ERC165, IERC721, IERC721Metadata {
-    // Token name
+contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
+    //Token name
     string private _name;
-    // Token symbol
+    //Token symbol
     string private _symbol;
-    // Base URI for metadata
+    //Base URI for metadata
     string private _baseTokenURI;
+    //Gacha contract address
+    address public gachaContract;
+    // Counter for token IDs
+    uint256 private _tokenIdCounter;
 
     //Token ID to owner address
     mapping(uint256 => address) private _owners;
@@ -22,13 +27,8 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata {
     mapping(uint256 => address) private _tokenApprovals;
     //Owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
-    //CardId to Monkey
-    mapping(address => mapping(uint256 => Monkey)) _monkeys;
-    //CardId to URI
-    mapping(uint256 => string) _tokenUris;
-
-    // Counter for token IDs
-    uint256 private _tokenIdCounter;
+    //Token ID to Monkey
+    mapping(uint256 => Monkey) private _monkeys;
 
     enum Rarity { Common, Rare, Epic, Legendary }
     enum PowerType { Fire, Water, Earth}
@@ -43,15 +43,23 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata {
         uint256 health;
     }
 
-    constructor() {
+    constructor(address _gachaContract, string memory baseURI) Ownable() {
         _name = "Monkey Brothers";
         _symbol = "MONKBRO";
-        _baseTokenURI = "";
+        _baseTokenURI = baseURI;
+
+        if (_gachaContract != address(0)) {
+            gachaContract = _gachaContract;
+        }
 
         // Register the supported interfaces
         _registerInterface(type(IERC721).interfaceId);
         _registerInterface(type(IERC721Metadata).interfaceId);
     }
+
+    event GachaContractUpdated(address indexed oldGacha, address indexed newGacha);
+    event BaseURIUpdated(string oldURI, string newBaseURI);
+    event MonkeyCreated(uint256 indexed tokenId, string name, Rarity rarity, PowerType powerType);
 
     // ERC721Metadata implementation
     function name() public view virtual override returns (string memory) {
@@ -65,7 +73,20 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata {
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
         string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, toString(tokenId))) : "";
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, toString(tokenId), ".json")) : "";
+    }
+
+    function setBaseURI(string memory newBaseURI) external onlyOwner {
+        require(bytes(newBaseURI).length > 0, "Empty base URI");
+        string memory oldURI = _baseTokenURI;
+        _baseTokenURI = newBaseURI;
+        emit BaseURIUpdated(oldURI, newBaseURI);
+    }
+
+    function setGachaContract(address _newGachaContract) external onlyOwner {
+        require(_newGachaContract != address(0), "Invalid gacha address");
+        emit GachaContractUpdated(gachaContract, _newGachaContract);
+        gachaContract = _newGachaContract;
     }
 
     // ERC721 implementation
@@ -109,7 +130,7 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata {
     function transferFrom(address from, address to, uint256 tokenId) public virtual override {
         require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: Caller is not token owner or approved");
         _transfer(from, to, tokenId);
-    }
+    }                                                                                                                                                                    
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public virtual override {
         safeTransferFrom(from, to, tokenId, "");
@@ -120,13 +141,28 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata {
         _safeTransfer(from, to, tokenId, data);
     }
 
-    // Public minting function
-    // function mint() public returns (uint256) {
-    //     uint256 tokenId = _tokenIdCounter;
-    //     _mint(msg.sender, tokenId);
-    //     _tokenIdCounter++;
-    //     return tokenId;
-    // }
+    function mintMonkey(address to, string memory monkeyName, uint8 rarity, uint8 powerType, uint256 attack, uint256 health) external returns (uint256) {
+        require(msg.sender == gachaContract);
+        require(to != address(0), "Cannot mint to zero address");
+        require(rarity <= uint8(Rarity.Legendary), "Invalid rarity");
+        require(powerType <= uint8(PowerType.Earth), "Invalid power type");
+
+        uint256 tokenId = _tokenIdCounter;
+        _mint(to, tokenId);
+
+        _monkeys[tokenId] = Monkey({
+            id: tokenId,
+            name:  monkeyName,
+            rarity: Rarity(rarity),
+            powerType: PowerType(powerType),
+            attack: attack,
+            health: health
+        });
+
+        _tokenIdCounter++;
+        emit MonkeyCreated(tokenId, monkeyName, Rarity(rarity), PowerType(powerType));
+        return tokenId;
+    }
 
     // Internal functions
     function _baseURI() internal view virtual returns (string memory) {
@@ -142,15 +178,19 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata {
         return (spender == owner || isApprovedForAll(owner, spender) || getApproved(tokenId) == spender);
     }
 
-    // function _mint(address to, uint256 tokenId) internal virtual {
-    //     require(to != address(0), "ERC721: mint to the zero address");
-    //     require(!_exists(tokenId), "ERC721: token already minted");
+    function _mint(address to, uint256 tokenId) internal virtual {
+        require(to != address(0), "ERC 721: mint to zero address");
+        require(!_exists(tokenId), "ERC721: token already minted");
 
-    //     _balances[to] += 1;
-    //     _owners[tokenId] = to;
+        _beforeTokenTransfer(address(0), to, tokenId);
 
-    //     emit Transfer(address(0), to, tokenId);
-    // }
+        _balances[to] += 1;
+        _owners[tokenId] = to;
+
+        emit Transfer(address(0), to, tokenId);
+
+        _afterTokenTransfer(address(0), to, tokenId);        
+    }
 
     function _transfer(address from, address to, uint256 tokenId) internal virtual {
         require(ownerOf(tokenId) == from, "ERC721: transfer from incorrect owner");
@@ -217,5 +257,10 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata {
             value /= 10;
         }
         return string(buffer);
+    }
+
+    function getMonkey(uint256 tokenId) public view returns (Monkey memory) {
+        require(_exists(tokenId), "Monkey does not exist");
+        return _monkeys[tokenId];
     }
 }

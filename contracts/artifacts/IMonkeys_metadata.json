@@ -1,0 +1,106 @@
+{
+	"compiler": {
+		"version": "0.8.26+commit.8a97fa7a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "monkeyName",
+						"type": "string"
+					},
+					{
+						"internalType": "uint8",
+						"name": "rarity",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint8",
+						"name": "powerType",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "attack",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "health",
+						"type": "uint256"
+					}
+				],
+				"name": "mintMonkey",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Gacha.sol": "IMonkeys"
+		},
+		"evmVersion": "cancun",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Gacha.sol": {
+			"keccak256": "0x40089dab2024d17c0666090724f46bb3381807b93e70a0fbcb1aa5fcd8c15e42",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://e2c946b11cb39ba5f695accf93a3548727b2bc85ed2f86ff7a4955f6b3bd4088",
+				"dweb:/ipfs/QmRTwarCmVw3Yw83H4BZLwDXfF4L7qdNrsfBNivarHomds"
+			]
+		},
+		"contracts/IERC20.sol": {
+			"keccak256": "0x07a0f490fb568d855f744f8a8ed8b68b523c28c64e230e9816921ade79cf1b13",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://727deb9ceacb88c9c6d0e69120965d33c3fd96e7e04818f8bf099c5ac7714cfb",
+				"dweb:/ipfs/QmR1HA8s3UgC82Wmu7dPjrHzXschsoDHqwyuDJTRtxey4D"
+			]
+		},
+		"contracts/Ownable.sol": {
+			"keccak256": "0x53da9136c9cff9e57dff8bdd82555fe21b59077755f9ed56e08e7ebfb92e112d",
+			"license": "GPL-3.0",
+			"urls": [
+				"bzz-raw://1a2cb3f10ae4fc7dcf6a07e61039c7cddb81a5108c1a22dfe95e84e21f68fe7e",
+				"dweb:/ipfs/QmbYWyzrUq7M5ytRzMd7As5yyL9LfYxFuW6wUFcGoS25iK"
+			]
+		}
+	},
+	"version": 1
+}
