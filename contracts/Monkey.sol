@@ -31,7 +31,7 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
     mapping(uint256 => Monkey) private _monkeys;
 
     enum Rarity { Common, Rare, Epic, Legendary }
-    enum PowerType { Fire, Water, Earth}
+    enum PowerType { Fire, Water, Earth }
 
     //Structure for properties of each Monkey card
     struct Monkey {
