@@ -1,0 +1,700 @@
+{
+	"compiler": {
+		"version": "0.8.26+commit.8a97fa7a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_monkeyContract",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_monkToken",
+						"type": "address"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "oldFee",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "newFee",
+						"type": "uint256"
+					}
+				],
+				"name": "CommissionFeeUpdated",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "oldPeriod",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "newPeriod",
+						"type": "uint256"
+					}
+				],
+				"name": "CooldownPeriodUpdated",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "owner",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "FeesWithdrawn",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					}
+				],
+				"name": "MonkeyDelisted",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					}
+				],
+				"name": "MonkeyListed",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "buyer",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					}
+				],
+				"name": "MonkeySold",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "oldPrice",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "newPrice",
+						"type": "uint256"
+					}
+				],
+				"name": "PriceUpdated",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "buyMonkey",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "canUpdatePrice",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "commissionFee",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "delistMonkey",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "getListingDetails",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isActive",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "lastPriceUpdate",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					}
+				],
+				"name": "isListed",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "isOwner",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					}
+				],
+				"name": "listMonkey",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256[]",
+						"name": "tokenIds",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "prices",
+						"type": "uint256[]"
+					}
+				],
+				"name": "listMultipleMonkeys",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "listings",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "seller",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isActive",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "lastPriceUpdate",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "monkToken",
+				"outputs": [
+					{
+						"internalType": "contract Monk",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "monkeyContract",
+				"outputs": [
+					{
+						"internalType": "contract Monkeys",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "priceUpdateCooldown",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "totalFees",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "newFee",
+						"type": "uint256"
+					}
+				],
+				"name": "updateCommissionFee",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "tokenId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "newPrice",
+						"type": "uint256"
+					}
+				],
+				"name": "updateListingPrice",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "newCooldown",
+						"type": "uint256"
+					}
+				],
+				"name": "updatePriceUpdateCooldown",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "withdrawFees",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {
+				"buyMonkey(uint256)": {
+					"details": "Buy a listed Monkey",
+					"params": {
+						"tokenId": "The ID of the Monkey to buy"
+					}
+				},
+				"canUpdatePrice(uint256)": {
+					"details": "Check if price update is allowed for a token",
+					"params": {
+						"tokenId": "The ID of the Monkey"
+					}
+				},
+				"delistMonkey(uint256)": {
+					"details": "Delist a Monkey from sale",
+					"params": {
+						"tokenId": "The ID of the Monkey to delist"
+					}
+				},
+				"getListingDetails(uint256)": {
+					"details": "Get listing details",
+					"params": {
+						"tokenId": "The ID of the Monkey"
+					}
+				},
+				"isListed(uint256)": {
+					"details": "Check if a Monkey is listed",
+					"params": {
+						"tokenId": "The ID of the Monkey"
+					}
+				},
+				"listMonkey(uint256,uint256)": {
+					"details": "List a Monkey for sale",
+					"params": {
+						"price": "The price in MONK tokens",
+						"tokenId": "The ID of the Monkey to list"
+					}
+				},
+				"listMultipleMonkeys(uint256[],uint256[])": {
+					"details": "List multiple Monkeys for sale",
+					"params": {
+						"prices": "Array of prices for each Monkey",
+						"tokenIds": "Array of Monkey IDs to list"
+					}
+				},
+				"updateCommissionFee(uint256)": {
+					"details": "Update commission fee - only owner",
+					"params": {
+						"newFee": "New commission fee amount"
+					}
+				},
+				"updateListingPrice(uint256,uint256)": {
+					"details": "Update the price of a listed Monkey",
+					"params": {
+						"newPrice": "The new price",
+						"tokenId": "The ID of the Monkey"
+					}
+				},
+				"updatePriceUpdateCooldown(uint256)": {
+					"details": "Update price update cooldown period - only owner",
+					"params": {
+						"newCooldown": "New cooldown period in seconds"
+					}
+				},
+				"withdrawFees()": {
+					"details": "Withdraw accumulated fees - only owner"
+				}
+			},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Bazaar.sol": "Bazaar"
+		},
+		"evmVersion": "cancun",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/Bazaar.sol": {
+			"keccak256": "0x56372a96affe32292f703c4830cdce31d9f3e2dcc2c1558a39ec4d130df7b872",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://de01cad1376dfc43337a53628ff42c3400a98cfa963dc9e34e77e585daedecd3",
+				"dweb:/ipfs/QmRXnm75DAsFWYCrJJ7s1BDZNYQgaM2A5MvM4Gx25GvaQ7"
+			]
+		},
+		"contracts/ERC165/ERC165.sol": {
+			"keccak256": "0x0cf721450cc7884632f0820041c23e80d6765d3e6792baece463c7924361aafc",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://dd7200284c89ac890e586c8aa41c625653d25cfffb58053ff2f039ed82c829eb",
+				"dweb:/ipfs/QmNwAtH4zZnfiVSVTKjrC2boXMgMZsDUwTpKB6aNWQ6dqv"
+			]
+		},
+		"contracts/ERC165/IERC165.sol": {
+			"keccak256": "0xaba1d3b9d5e824baede3ad0be9c42ec8d34cee71df8ae63f70aefd5bbbab09de",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://85c9cb563f933c642a2e0037a39f6962f0dc1a4811e3a6d130cb7317bacf1bd1",
+				"dweb:/ipfs/QmXUoks1MtXQ28bnh4pSGnwW1ewNyyFyxifzydyWgi66Sf"
+			]
+		},
+		"contracts/ERC20.sol": {
+			"keccak256": "0xcb1217f4704c78ca1ab427365d02d3ac328b8214296c72034decad9c8b309e32",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://fcdbe3bc4811f401e6d9ea73a9156819b2340b71d5a392b20b4e80d3d3dfe2e1",
+				"dweb:/ipfs/QmbWDnKhu5Ki3t4qRt75VtUmXia5bM2tfWLqrVxbtFqTZd"
+			]
+		},
+		"contracts/ERC721/IERC721.sol": {
+			"keccak256": "0x7621e127722ae1b619bc77dd2e8dea18d18eaf554e7096f036b6d1c3fa3f0360",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://be8d4dfafb236d3e076f81d4fc42f869a2185bcd0b5f207592bd568f74e202b1",
+				"dweb:/ipfs/QmRh8f8Q3ERAfj7ZAdfxhLpPCFcWPXoZeMjVJZ7cXxKCKs"
+			]
+		},
+		"contracts/ERC721/IERC721Metadata.sol": {
+			"keccak256": "0x17c6c817a8c8d238ed69161fe51dcc6e0ce4586852a57a12833a122388c24a22",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://7cdb49797ef9274d63fcae9cb4068356bdbb423264de6cb638c5b9780f7c093a",
+				"dweb:/ipfs/Qmf3V7g1dGzYCgeGBHMhKQP8Dwv13U1iqMUPAuE5MwJ2wD"
+			]
+		},
+		"contracts/ERC721/IERC721Receiver.sol": {
+			"keccak256": "0x4e8c460e1ee34a43c27f31cc3745669fe7dd91c07c870c5e447557c9f29dba41",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://c546b49aa628726e74f2d6720218fdf9689c8c700841f3cdc6e34cb587d9e562",
+				"dweb:/ipfs/QmeRAqiytiyjHkXBiGaBjmtzwp8tqt3tVoNQjARCHr5cCx"
+			]
+		},
+		"contracts/IERC20.sol": {
+			"keccak256": "0x07a0f490fb568d855f744f8a8ed8b68b523c28c64e230e9816921ade79cf1b13",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://727deb9ceacb88c9c6d0e69120965d33c3fd96e7e04818f8bf099c5ac7714cfb",
+				"dweb:/ipfs/QmR1HA8s3UgC82Wmu7dPjrHzXschsoDHqwyuDJTRtxey4D"
+			]
+		},
+		"contracts/Monk.sol": {
+			"keccak256": "0x89f70328f49f71ad4c72af768671f3b5a58dae99093f27a8165edfdb7843de12",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://208cad5339b86ac4b519829bb4e56411d9a22a3f8b459f2c109f4e1f5c57d167",
+				"dweb:/ipfs/Qmd1EXCexcL74TJSCqTr74ajZi5bv7cErsL2duggNNQop4"
+			]
+		},
+		"contracts/Monkey.sol": {
+			"keccak256": "0x29550a8c17fd4620da433f17fc355f909d0f7cc06977b4d10b4cf55f52c53eb5",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://5d9aac7172a9b4e0201aab326ead6b6ff592cc24e24922019b5582c0f3d90a4f",
+				"dweb:/ipfs/QmcHVHwfEYEkhftiEmsmgaN8mosadiUgJLEYXk41dZsdDx"
+			]
+		},
+		"contracts/Ownable.sol": {
+			"keccak256": "0xb3f8c931e807931cce20f72a61d4d5139df5615e0fc202bd2bcd5f31e3d1fab5",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://cb59527cf3ce2e8fd888d9a0c0a8b8cf6122d475bb3e413506e2103b255ce9d3",
+				"dweb:/ipfs/QmapsJXRMpjMhaKeWdpVbEvyHYkHubaCHTiuBHbxFRE9Nv"
+			]
+		},
+		"contracts/extensions/IERC20Metadata.sol": {
+			"keccak256": "0xa2df86d1c45d3de3dc5a17f00bc956b9f4bebdd0d81d974f71fd4e2b5523a2b3",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://b069590eba176e9c5c8f46536e44ccf53f6ac572b7fd8ef9f700b9affdd37cf1",
+				"dweb:/ipfs/QmX1REaUcDPpySSt6yCxgZAX3NhHnoZ8wMkHxPrc6bNkLz"
+			]
+		},
+		"contracts/extensions/IERC6093.sol": {
+			"keccak256": "0x44a20c8f55f317f1f72a8073b7aff8906a4fb67e0432e7c00f64caaf234de936",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://f0dd61fbb79fd9593bcd53e7d100165fce97dacdc93cbe3bc42d8c1023f3c238",
+				"dweb:/ipfs/QmWYeyMXK4rqGzKUMN5gBdXByFrrYMaY8azu45bmeddn4C"
+			]
+		},
+		"contracts/utils/Context.sol": {
+			"keccak256": "0x47f10494606b86ed149dcaad74cb401ad9311696f14689410c45c7330e3f34fb",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://8f393625f893d7c666e014fd8e9b8cf59f7fe21b030f80f571d892006cdd77e6",
+				"dweb:/ipfs/QmQVtX3R1LqVz2KVyzsRmVM6Zgkf9acU4Cn2hhXxYYev9U"
+			]
+		}
+	},
+	"version": 1
+}

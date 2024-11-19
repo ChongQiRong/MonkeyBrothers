@@ -1,0 +1,131 @@
+{
+	"compiler": {
+		"version": "0.8.26+commit.8a97fa7a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_exp",
+						"type": "uint256"
+					}
+				],
+				"name": "addExperience",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "exp",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "level",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "maxLevel",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "requiredExpForNextLevel",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "Stores player's level and experience",
+			"kind": "dev",
+			"methods": {
+				"addExperience(uint256)": {
+					"details": "Increases the player's experience by a given amount",
+					"params": {
+						"_exp": "The amount of experience to add"
+					}
+				},
+				"requiredExpForNextLevel()": {
+					"details": "Returns the experience required for the next level",
+					"returns": {
+						"_0": "The required experience for next level"
+					}
+				}
+			},
+			"title": "Player Details",
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/PlayerDetails.sol": "PlayerDetails"
+		},
+		"evmVersion": "cancun",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/PlayerDetails.sol": {
+			"keccak256": "0x744ff16640d62ef60cb875a3c9e442fa1b82cbee9aa7f7389a436974ab911c71",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://186a0f3357bc3b64b46ff3a32d52239cd9626e733fb0f7b5dbce39c75dccae71",
+				"dweb:/ipfs/Qmc7TFFPhdXMw1tFbh4qW6rzZbLrEpnAcq5Rtztw8grdyc"
+			]
+		}
+	},
+	"version": 1
+}
