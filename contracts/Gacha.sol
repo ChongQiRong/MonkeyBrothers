@@ -15,6 +15,10 @@ contract MonkeyGacha is Ownable {
     uint16 public EPIC_CHANCE = 1500; // 15%
     uint16 public LEGENDARY_CHANCE = 500; // 5%
 
+    // Costs
+    uint256 public constant GACHA_PRICE = 1 ether; // 1 MONK token for regular draw
+    uint256 public constant STARTER_PACK_PRICE = 5 ether; // 5 MONK tokens for starter pack
+
     // Stats ranges per rarity
     struct StatRange {
         uint256 minAttack;
@@ -24,6 +28,7 @@ contract MonkeyGacha is Ownable {
     }
 
     mapping(uint8 => StatRange) public rarityStats;
+    mapping(address => bool) public hasClaimedStarterPack;
 
     string[] private firstNames;
     string[] private lastNames;
@@ -37,6 +42,8 @@ contract MonkeyGacha is Ownable {
         uint256 health,
         string name
     );
+
+    event StarterPackClaimed(address indexed player, uint256[] monkeyIds);
 
     event TokensWithdrawn(
         address indexed owner,
@@ -81,16 +88,74 @@ contract MonkeyGacha is Ownable {
         _initializeNames();
     }
 
+    /**
+     * @dev Purchase a starter pack containing 3 Common Monkeys (one of each Type)
+     */
+    function claimStarterPack() external {
+        require(
+            !hasClaimedStarterPack[msg.sender],
+            "Starter pack already claimed"
+        );
+        require(
+            monkToken.balanceOf(msg.sender) >= STARTER_PACK_PRICE,
+            "Insufficient MONK balance"
+        );
+        require(
+            monkToken.allowance(msg.sender, address(this)) >=
+                STARTER_PACK_PRICE,
+            "Insufficient MONK allowance"
+        );
+
+        // Transfer MONK tokens
+        require(
+            monkToken.transferFrom(
+                msg.sender,
+                address(this),
+                STARTER_PACK_PRICE
+            ),
+            "Token transfer failed"
+        );
+
+        // Generate three monkeys (one of each type)
+        uint256[] memory monkeyIds = new uint256[](3);
+        string[3] memory names = [
+            "Fire Novice",
+            "Water Novice",
+            "Earth Novice"
+        ];
+
+        for (uint8 i = 0; i < 3; i++) {
+            // Generate balanced stats for starter monkeys
+            uint256 attack = 10 + _random(6); // Attack between 10-15
+            uint256 health = 45 + _random(6); // Health between 45-50
+
+            monkeyIds[i] = monkeyNFT.mintMonkey(
+                msg.sender,
+                names[i],
+                uint8(Monkeys.Rarity.Common),
+                i, // PowerType (0=Fire, 1=Water, 2=Earth)
+                attack,
+                health
+            );
+        }
+
+        hasClaimedStarterPack[msg.sender] = true;
+        emit StarterPackClaimed(msg.sender, monkeyIds);
+    }
+
+    /**
+     * @dev Regular gacha draw for a single monkey
+     */
     function drawMonkey() external {
         // Check if player has enough MONK tokens
         require(
-            monkToken.balanceOf(msg.sender) >= 1 ether,
+            monkToken.balanceOf(msg.sender) >= GACHA_PRICE,
             "Insufficient MONK balance"
         );
 
         // Transfer MONK tokens from player
         require(
-            monkToken.transferFrom(msg.sender, address(this), 1 ether),
+            monkToken.transferFrom(msg.sender, address(this), GACHA_PRICE),
             "Transfer failed"
         );
 
@@ -125,6 +190,13 @@ contract MonkeyGacha is Ownable {
             health,
             name
         );
+    }
+
+    /**
+     * @dev Check if an address can claim a starter pack
+     */
+    function canClaimStarterPack(address player) external view returns (bool) {
+        return !hasClaimedStarterPack[player];
     }
 
     function _determineRarity() internal view returns (uint8) {
@@ -253,9 +325,11 @@ contract MonkeyGacha is Ownable {
         string[] calldata _lastNames
     ) external onlyOwner {
         for (uint i = 0; i < _firstNames.length; i++) {
+            require(bytes(_firstNames[i]).length > 0, "Empty first name");
             firstNames.push(_firstNames[i]);
         }
         for (uint i = 0; i < _lastNames.length; i++) {
+            require(bytes(_lastNames[i]).length > 0, "Empty last name");
             lastNames.push(_lastNames[i]);
         }
     }
