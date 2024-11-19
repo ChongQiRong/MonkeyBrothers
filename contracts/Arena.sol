@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
-
+pragma solidity ^0.8.21;
 
 import "./PlayerDetails.sol";
 import "./Monkey.sol";
@@ -8,24 +7,24 @@ import "./Monk.sol";
 
 /**
  * @title Fight
- * @dev Fight is the main functionality of our game, where an array of 5 Beasts fight with another 5 Beasts and 
+ * @dev Fight is the main functionality of our game, where an array of 5 Beasts fight with another 5 Beasts and
  * and the winner wins gems based on the difference in damage dealt to the opponent.
  */
 contract Arena {
     Monkeys monkeyContract;
     Monk monkContract;
     PlayerDetails playerDetailsContract;
-    address[] matchmakingQueue; 
+    address[] matchmakingQueue;
     address owner;
 
     /**
      * Sets the values for the owner of contract, gemContract, cardContract and mmrContract
      * @param _monkContract Address of deployed Monk contract
-     * @param _monkeyContract Address of deployed Monkeys contract 
+     * @param _monkeyContract Address of deployed Monkeys contract
      * @param _playerDetailsContract Address of deployed PlayerDetails contract
      */
     constructor(
-        address _monkContract, 
+        address _monkContract,
         address _monkeyContract,
         address _playerDetailsContract
     ) {
@@ -49,10 +48,9 @@ contract Arena {
      * @dev Places a user to the matchmaking queue if queue is empty, else battle with the person at the top of the queue
      * @param monkeys Array of 3 monkey token IDs in the order they will battle
      */
-    function fight(uint256[] memory monkeys) public 
-        isOwnerOfMonkeys(monkeys) 
-        isCorrectNumMonkeys(monkeys) 
-    {
+    function fight(
+        uint256[] memory monkeys
+    ) public isOwnerOfMonkeys(monkeys) isCorrectNumMonkeys(monkeys) {
         // If queue is empty, add player to queue
         if (matchmakingQueue.length == 0) {
             matchmakingQueue.push(msg.sender);
@@ -75,10 +73,17 @@ contract Arena {
 
         // Battle each monkey pair
         for (uint i = 0; i < monkeys.length; i++) {
-            uint[] memory powerTypes = getPowerTypes(monkeys[i], opponentMonkeys[i]);
-            
-            Monkeys.Monkey memory myMonkey = monkeyContract.getMonkey(monkeys[i]);
-            Monkeys.Monkey memory enemyMonkey = monkeyContract.getMonkey(opponentMonkeys[i]);
+            uint[] memory powerTypes = getPowerTypes(
+                monkeys[i],
+                opponentMonkeys[i]
+            );
+
+            Monkeys.Monkey memory myMonkey = monkeyContract.getMonkey(
+                monkeys[i]
+            );
+            Monkeys.Monkey memory enemyMonkey = monkeyContract.getMonkey(
+                opponentMonkeys[i]
+            );
 
             myDamage += (myMonkey.attack * powerTypes[0]) / 10;
             opponentDamage += (enemyMonkey.attack * powerTypes[1]) / 10;
@@ -90,7 +95,7 @@ contract Arena {
             playerDetailsContract.addExperience(msg.sender, 100);
             emit damageDifference(myDamage - opponentDamage);
         } else if (opponentDamage > myDamage) {
-            emit outcomeWin(opponent); 
+            emit outcomeWin(opponent);
             playerDetailsContract.addExperience(opponent, 100);
             emit damageDifference(opponentDamage - myDamage);
         } else {
@@ -106,7 +111,10 @@ contract Arena {
      * @param myMonkey ID of my Monkey
      * @param enemyMonkey ID of enemy Monkey
      */
-    function getPowerTypes(uint256 myMonkey, uint256 enemyMonkey) internal view returns (uint[] memory) {
+    function getPowerTypes(
+        uint256 myMonkey,
+        uint256 enemyMonkey
+    ) internal view returns (uint[] memory) {
         uint[] memory powerTypes = new uint[](2);
         powerTypes[0] = 10;
         powerTypes[1] = 10;
@@ -126,10 +134,22 @@ contract Arena {
         return powerTypes;
     }
 
-    function isEffectiveAgainst(Monkeys.PowerType attacker, Monkeys.PowerType defender) internal pure returns (bool) {
-        if (attacker == Monkeys.PowerType.Fire && defender == Monkeys.PowerType.Earth) return true;
-        if (attacker == Monkeys.PowerType.Water && defender == Monkeys.PowerType.Fire) return true;
-        if (attacker == Monkeys.PowerType.Earth && defender == Monkeys.PowerType.Water) return true;
+    function isEffectiveAgainst(
+        Monkeys.PowerType attacker,
+        Monkeys.PowerType defender
+    ) internal pure returns (bool) {
+        if (
+            attacker == Monkeys.PowerType.Fire &&
+            defender == Monkeys.PowerType.Earth
+        ) return true;
+        if (
+            attacker == Monkeys.PowerType.Water &&
+            defender == Monkeys.PowerType.Fire
+        ) return true;
+        if (
+            attacker == Monkeys.PowerType.Earth &&
+            defender == Monkeys.PowerType.Water
+        ) return true;
         return false;
     }
 
@@ -146,7 +166,10 @@ contract Arena {
      */
     modifier isOwnerOfMonkeys(uint256[] memory monkeys) {
         for (uint i = 0; i < monkeys.length; i++) {
-            require(monkeyContract.ownerOf(monkeys[i]) == msg.sender, "Monkey does not belong to player");
+            require(
+                monkeyContract.ownerOf(monkeys[i]) == msg.sender,
+                "Monkey does not belong to player"
+            );
         }
         _;
     }

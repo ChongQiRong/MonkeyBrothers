@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import "./ERC165/ERC165.sol";
 import "../contracts/ERC721/IERC721.sol";
@@ -30,8 +30,17 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
     //Token ID to Monkey
     mapping(uint256 => Monkey) private _monkeys;
 
-    enum Rarity { Common, Rare, Epic, Legendary }
-    enum PowerType { Fire, Water, Earth }
+    enum Rarity {
+        Common,
+        Rare,
+        Epic,
+        Legendary
+    }
+    enum PowerType {
+        Fire,
+        Water,
+        Earth
+    }
 
     //Structure for properties of each Monkey card
     struct Monkey {
@@ -57,9 +66,17 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         _registerInterface(type(IERC721Metadata).interfaceId);
     }
 
-    event GachaContractUpdated(address indexed oldGacha, address indexed newGacha);
+    event GachaContractUpdated(
+        address indexed oldGacha,
+        address indexed newGacha
+    );
     event BaseURIUpdated(string oldURI, string newBaseURI);
-    event MonkeyCreated(uint256 indexed tokenId, string name, Rarity rarity, PowerType powerType);
+    event MonkeyCreated(
+        uint256 indexed tokenId,
+        string name,
+        Rarity rarity,
+        PowerType powerType
+    );
 
     // ERC721Metadata implementation
     function name() public view virtual override returns (string memory) {
@@ -70,10 +87,18 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         return _symbol;
     }
 
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
+        require(
+            _exists(tokenId),
+            "ERC721Metadata: URI query for nonexistent token"
+        );
         string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, toString(tokenId), ".json")) : "";
+        return
+            bytes(baseURI).length > 0
+                ? string(abi.encodePacked(baseURI, toString(tokenId), ".json"))
+                : "";
     }
 
     function setBaseURI(string memory newBaseURI) external onlyOwner {
@@ -90,12 +115,19 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
     }
 
     // ERC721 implementation
-    function balanceOf(address owner) public view virtual override returns (uint256) {
-        require(owner != address(0), "ERC721: Address zero is not a valid owner");
+    function balanceOf(
+        address owner
+    ) public view virtual override returns (uint256) {
+        require(
+            owner != address(0),
+            "ERC721: Address zero is not a valid owner"
+        );
         return _balances[owner];
     }
 
-    function ownerOf(uint256 tokenId) public view virtual override returns (address) {
+    function ownerOf(
+        uint256 tokenId
+    ) public view virtual override returns (address) {
         address owner = _owners[tokenId];
         require(owner != address(0), "ERC721: Invalid token ID");
         return owner;
@@ -112,36 +144,73 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         emit Approval(owner, to, tokenId);
     }
 
-    function setApprovalForAll(address operator, bool approved) public virtual override {
+    function setApprovalForAll(
+        address operator,
+        bool approved
+    ) public virtual override {
         require(msg.sender != operator, "ERC721: Approve to caller");
         _operatorApprovals[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
 
-    function getApproved(uint256 tokenId) public view virtual override returns (address) {
-        require(_exists(tokenId), "ERC721: Approved query for nonexistent token");
+    function getApproved(
+        uint256 tokenId
+    ) public view virtual override returns (address) {
+        require(
+            _exists(tokenId),
+            "ERC721: Approved query for nonexistent token"
+        );
         return _tokenApprovals[tokenId];
     }
 
-    function isApprovedForAll(address owner, address operator) public view virtual override returns (bool) {
+    function isApprovedForAll(
+        address owner,
+        address operator
+    ) public view virtual override returns (bool) {
         return _operatorApprovals[owner][operator];
     }
 
-    function transferFrom(address from, address to, uint256 tokenId) public virtual override {
-        require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: Caller is not token owner or approved");
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override {
+        require(
+            _isApprovedOrOwner(msg.sender, tokenId),
+            "ERC721: Caller is not token owner or approved"
+        );
         _transfer(from, to, tokenId);
-    }                                                                                                                                                                    
+    }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId) public virtual override {
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override {
         safeTransferFrom(from, to, tokenId, "");
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public virtual override {
-        require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: Caller is not token owner or approved");
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public virtual override {
+        require(
+            _isApprovedOrOwner(msg.sender, tokenId),
+            "ERC721: Caller is not token owner or approved"
+        );
         _safeTransfer(from, to, tokenId, data);
     }
 
-    function mintMonkey(address to, string memory monkeyName, uint8 rarity, uint8 powerType, uint256 attack, uint256 health) external returns (uint256) {
+    function mintMonkey(
+        address to,
+        string memory monkeyName,
+        uint8 rarity,
+        uint8 powerType,
+        uint256 attack,
+        uint256 health
+    ) external returns (uint256) {
         require(msg.sender == gachaContract);
         require(to != address(0), "Cannot mint to zero address");
         require(rarity <= uint8(Rarity.Legendary), "Invalid rarity");
@@ -152,7 +221,7 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
 
         _monkeys[tokenId] = Monkey({
             id: tokenId,
-            name:  monkeyName,
+            name: monkeyName,
             rarity: Rarity(rarity),
             powerType: PowerType(powerType),
             attack: attack,
@@ -160,7 +229,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         });
 
         _tokenIdCounter++;
-        emit MonkeyCreated(tokenId, monkeyName, Rarity(rarity), PowerType(powerType));
+        emit MonkeyCreated(
+            tokenId,
+            monkeyName,
+            Rarity(rarity),
+            PowerType(powerType)
+        );
         return tokenId;
     }
 
@@ -173,9 +247,14 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         return _owners[tokenId] != address(0);
     }
 
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
+    function _isApprovedOrOwner(
+        address spender,
+        uint256 tokenId
+    ) internal view virtual returns (bool) {
         address owner = ownerOf(tokenId);
-        return (spender == owner || isApprovedForAll(owner, spender) || getApproved(tokenId) == spender);
+        return (spender == owner ||
+            isApprovedForAll(owner, spender) ||
+            getApproved(tokenId) == spender);
     }
 
     function _mint(address to, uint256 tokenId) internal virtual {
@@ -189,11 +268,18 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
 
         emit Transfer(address(0), to, tokenId);
 
-        _afterTokenTransfer(address(0), to, tokenId);        
+        _afterTokenTransfer(address(0), to, tokenId);
     }
 
-    function _transfer(address from, address to, uint256 tokenId) internal virtual {
-        require(ownerOf(tokenId) == from, "ERC721: transfer from incorrect owner");
+    function _transfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {
+        require(
+            ownerOf(tokenId) == from,
+            "ERC721: transfer from incorrect owner"
+        );
         require(to != address(0), "ERC721: transfer to the zero address");
 
         _beforeTokenTransfer(from, to, tokenId);
@@ -207,14 +293,30 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         _afterTokenTransfer(from, to, tokenId);
     }
 
-    function _safeTransfer(address from, address to, uint256 tokenId, bytes memory data) internal virtual {
+    function _safeTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) internal virtual {
         _transfer(from, to, tokenId);
-        require(_checkOnERC721Received(from, to, tokenId, data), "ERC721: transfer to non ERC721Receiver implementer");
+        require(
+            _checkOnERC721Received(from, to, tokenId, data),
+            "ERC721: transfer to non ERC721Receiver implementer"
+        );
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual {}
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {}
 
-    function _afterTokenTransfer(address from, address to, uint256 tokenId) internal virtual {}
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual {}
 
     function _checkOnERC721Received(
         address from,
@@ -223,11 +325,20 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         bytes memory data
     ) private returns (bool) {
         if (to.code.length > 0) {
-            try IERC721Receiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 retval) {
+            try
+                IERC721Receiver(to).onERC721Received(
+                    msg.sender,
+                    from,
+                    tokenId,
+                    data
+                )
+            returns (bytes4 retval) {
                 return retval == IERC721Receiver.onERC721Received.selector;
             } catch (bytes memory reason) {
                 if (reason.length == 0) {
-                    revert("ERC721: transfer to non ERC721Receiver implementer");
+                    revert(
+                        "ERC721: transfer to non ERC721Receiver implementer"
+                    );
                 } else {
                     assembly {
                         revert(add(32, reason), mload(reason))

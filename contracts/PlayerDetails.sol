@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.21;
 
 /**
  * @title Player Details
@@ -8,7 +8,7 @@ pragma solidity ^0.8.17;
 contract PlayerDetails {
     address owner;
     address public arenaContract;
-    
+
     // Mapping of player address to their details
     mapping(address => PlayerData) private players;
     uint public constant maxLevel = 100;
@@ -50,7 +50,7 @@ contract PlayerDetails {
         if (players[player].level == 0) {
             players[player].level = 1;
         }
-        
+
         players[player].exp += _exp;
         _updateLevel(player);
     }
@@ -59,8 +59,10 @@ contract PlayerDetails {
      * @dev Updates the player's level based on the current experience
      */
     function _updateLevel(address player) internal {
-        while (players[player].exp >= requiredExpForNextLevel(player) && 
-               players[player].level < maxLevel) {
+        while (
+            players[player].exp >= requiredExpForNextLevel(player) &&
+            players[player].level < maxLevel
+        ) {
             players[player].exp -= requiredExpForNextLevel(player);
             players[player].level++;
         }
@@ -70,7 +72,9 @@ contract PlayerDetails {
      * @dev Returns the experience required for the next level
      * @return The required experience for next level
      */
-    function requiredExpForNextLevel(address player) public view returns (uint) {
+    function requiredExpForNextLevel(
+        address player
+    ) public view returns (uint) {
         return players[player].level * 100;
     }
 

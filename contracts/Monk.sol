@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.21;
 
-import "./ERC20.sol"; 
+import "./ERC20.sol";
 
 /**
  * @title Monk
@@ -11,7 +11,7 @@ contract Monk is ERC20("MONK", "MK") {
     uint256 supplyLimit;
     uint256 currentSupply;
     address owner;
-    
+
     /**
      * @dev Sets the values for owner of the contract and supply limit
      */
@@ -25,7 +25,10 @@ contract Monk is ERC20("MONK", "MK") {
      */
     function getMonks() public payable {
         uint256 amt = msg.value * 1000;
-        require(totalSupply() + amt < supplyLimit, "Warning: Insufficient Monks!");
+        require(
+            totalSupply() + amt < supplyLimit,
+            "Warning: Insufficient Monks!"
+        );
         _mint(msg.sender, amt);
     }
 
@@ -49,7 +52,10 @@ contract Monk is ERC20("MONK", "MK") {
      * @param recipient Address of recipient
      * @param value Amount of Monks to transfer
      */
-    function transferMonks(address recipient, uint256 value) public returns (bool) {
+    function transferMonks(
+        address recipient,
+        uint256 value
+    ) public returns (bool) {
         return transfer(recipient, value * 1000000000000000000);
     }
 
@@ -60,7 +66,10 @@ contract Monk is ERC20("MONK", "MK") {
      * @param amt Amount of Monks to transfer
      */
     function transferMonksFrom(address from, address to, uint256 amt) public {
-        require(allowance(from, msg.sender) > amt * 1000000000000000000, "Warning: You are not allowed to transfer!");
+        require(
+            allowance(from, msg.sender) > amt * 1000000000000000000,
+            "Warning: You are not allowed to transfer!"
+        );
         transferFrom(from, to, amt * 1000000000000000000);
     }
 
@@ -78,7 +87,10 @@ contract Monk is ERC20("MONK", "MK") {
      * @param user Address of the owner of the Monks
      * @param spender Address of the spender of the Monks
      */
-    function checkMonkAllowance(address user, address spender) public view returns (uint256) {
+    function checkMonkAllowance(
+        address user,
+        address spender
+    ) public view returns (uint256) {
         return allowance(user, spender) / 1000000000000000000;
     }
 
