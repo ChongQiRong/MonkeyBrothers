@@ -374,4 +374,11 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         require(_exists(tokenId), "Monkey does not exist");
         return _monkeys[tokenId];
     }
+
+    /**
+     * @dev Returns the total number of tokens minted
+     */
+    function getTotalMinted() public view returns (uint256) {
+        return _tokenIdCounter;
+    }
 }

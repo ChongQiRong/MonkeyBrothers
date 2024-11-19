@@ -9,272 +9,359 @@ contract Bazaar is Ownable {
     Monkeys public monkeyContract;
     Monk public monkToken;
 
-    uint256 public commissionFee;
-    uint256 public priceUpdateCooldown = 1 hours;
+    uint256 public constant COMMISSION_RATE = 200; // 2% (in basis points)
+    uint256 public constant AUCTION_DURATION = 12 hours;
+    uint256 public totalVolume;
+    uint256 public floorPrice;
+    uint256 public bestOffer;
+    uint256 public totalListings;
+    uint256 public totalFees;
 
     struct Listing {
         address seller;
-        uint256 price;
+        uint256 buyNowPrice;
+        uint256 startingBidPrice;
+        uint256 highestBid;
+        address highestBidder;
+        uint256 auctionEndTime;
         bool isActive;
-        uint256 lastPriceUpdate;
+        bool isAuction;
+    }
+
+    struct MarketMetrics {
+        uint256 totalVolume;
+        uint256 floorPrice;
+        uint256 bestOffer;
+        uint256 percentageListed;
+        uint256 uniqueOwners;
     }
 
     // TokenId => Listing
     mapping(uint256 => Listing) public listings;
-
-    // Total fees collected
-    uint256 public totalFees;
+    // Address => number of NFTs owned
+    mapping(address => uint256) public ownershipCount;
+    // Bidder => TokenId => Bid amount
+    mapping(address => mapping(uint256 => uint256)) public bids;
 
     event MonkeyListed(
         uint256 indexed tokenId,
         address indexed seller,
-        uint256 price
+        uint256 buyNowPrice,
+        uint256 startingBidPrice
     );
+
     event MonkeyDelisted(uint256 indexed tokenId, address indexed seller);
+
     event MonkeySold(
         uint256 indexed tokenId,
         address indexed seller,
         address indexed buyer,
         uint256 price
     );
-    event FeesWithdrawn(address indexed owner, uint256 amount);
-    event CommissionFeeUpdated(uint256 oldFee, uint256 newFee);
-    event PriceUpdated(
+
+    event BidPlaced(
         uint256 indexed tokenId,
-        uint256 oldPrice,
-        uint256 newPrice
+        address indexed bidder,
+        uint256 amount
     );
-    event CooldownPeriodUpdated(uint256 oldPeriod, uint256 newPeriod);
+
+    event AuctionEnded(
+        uint256 indexed tokenId,
+        address indexed winner,
+        uint256 winningBid
+    );
+
+    event MetricsUpdated(
+        uint256 totalVolume,
+        uint256 floorPrice,
+        uint256 bestOffer,
+        uint256 percentageListed,
+        uint256 uniqueOwners
+    );
+
+    event FeesWithdrawn(address indexed owner, uint256 amount);
 
     constructor(address _monkeyContract, address _monkToken) {
+        require(
+            _monkeyContract != address(0) && _monkToken != address(0),
+            "Invalid addresses"
+        );
         monkeyContract = Monkeys(_monkeyContract);
         monkToken = Monk(_monkToken);
-        commissionFee = 0.01 ether; // Initial fee
-        priceUpdateCooldown = 1 hours; // Initial cooldown period
+        floorPrice = type(uint256).max; // Initialize to max value
     }
 
-    /**
-     * @dev Update commission fee - only owner
-     * @param newFee New commission fee amount
-     */
-    function updateCommissionFee(uint256 newFee) external onlyOwner {
-        require(newFee > 0, "Fee must be greater than 0");
-        uint256 oldFee = commissionFee;
-        commissionFee = newFee;
-        emit CommissionFeeUpdated(oldFee, newFee);
-    }
-
-    /**
-     * @dev List a Monkey for sale
-     * @param tokenId The ID of the Monkey to list
-     * @param price The price in MONK tokens
-     */
-    function listMonkey(uint256 tokenId, uint256 price) external {
+    function listMonkey(
+        uint256 tokenId,
+        uint256 buyNowPrice,
+        uint256 startingBidPrice
+    ) external {
         require(monkeyContract.ownerOf(tokenId) == msg.sender, "Not the owner");
         require(!listings[tokenId].isActive, "Already listed");
-        require(price > 0, "Price must be greater than 0");
-
-        // Check if seller has approved enough MONK for the commission fee
+        require(buyNowPrice > 0, "Buy now price must be greater than 0");
         require(
-            monkToken.allowance(msg.sender, address(this)) >= commissionFee,
-            "Insufficient MONK allowance for fee"
+            startingBidPrice < buyNowPrice,
+            "Starting bid must be lower than buy now price"
         );
 
-        // Check if seller has approved the NFT transfer
+        // Check approval for NFT transfer
         require(
             monkeyContract.getApproved(tokenId) == address(this) ||
                 monkeyContract.isApprovedForAll(msg.sender, address(this)),
             "NFT not approved for transfer"
         );
 
-        // Transfer commission fee
-        require(
-            monkToken.transferFrom(msg.sender, address(this), commissionFee),
-            "Fee transfer failed"
-        );
-
-        // Transfer Monkey to contract
+        // Transfer NFT to contract
         monkeyContract.transferFrom(msg.sender, address(this), tokenId);
 
+        // Create listing
         listings[tokenId] = Listing({
             seller: msg.sender,
-            price: price,
+            buyNowPrice: buyNowPrice,
+            startingBidPrice: startingBidPrice,
+            highestBid: 0,
+            highestBidder: address(0),
+            auctionEndTime: block.timestamp + AUCTION_DURATION,
             isActive: true,
-            lastPriceUpdate: block.timestamp
+            isAuction: true
         });
 
-        emit MonkeyListed(tokenId, msg.sender, price);
-    }
-
-    /**
-     * @dev List multiple Monkeys for sale
-     * @param tokenIds Array of Monkey IDs to list
-     * @param prices Array of prices for each Monkey
-     */
-    function listMultipleMonkeys(
-        uint256[] calldata tokenIds,
-        uint256[] calldata prices
-    ) external {
-        require(tokenIds.length == prices.length, "Arrays length mismatch");
-        require(tokenIds.length > 0, "Empty arrays");
-
-        uint256 totalFee = commissionFee * tokenIds.length;
-        require(
-            monkToken.allowance(msg.sender, address(this)) >= totalFee,
-            "Insufficient MONK allowance for fees"
-        );
-
-        // Transfer total commission fees upfront
-        require(
-            monkToken.transferFrom(msg.sender, address(this), totalFee),
-            "Fees transfer failed"
-        );
-
-        for (uint i = 0; i < tokenIds.length; i++) {
-            require(
-                monkeyContract.ownerOf(tokenIds[i]) == msg.sender,
-                "Not the owner"
-            );
-            require(!listings[tokenIds[i]].isActive, "Monkey already listed");
-            require(prices[i] > 0, "Price must be greater than 0");
-
-            // Transfer Monkey to contract
-            monkeyContract.transferFrom(msg.sender, address(this), tokenIds[i]);
-
-            listings[tokenIds[i]] = Listing({
-                seller: msg.sender,
-                price: prices[i],
-                isActive: true,
-                lastPriceUpdate: block.timestamp
-            });
-
-            emit MonkeyListed(tokenIds[i], msg.sender, prices[i]);
+        totalListings++;
+        if (buyNowPrice < floorPrice) {
+            floorPrice = buyNowPrice;
         }
+
+        emit MonkeyListed(tokenId, msg.sender, buyNowPrice, startingBidPrice);
+        _updateMetrics();
     }
 
-    /**
-     * @dev Delist a Monkey from sale
-     * @param tokenId The ID of the Monkey to delist
-     */
     function delistMonkey(uint256 tokenId) external {
-        Listing memory listing = listings[tokenId];
+        Listing storage listing = listings[tokenId];
         require(listing.isActive, "Not listed");
         require(listing.seller == msg.sender, "Not the seller");
 
-        // Return commission fee
-        require(
-            monkToken.transfer(msg.sender, commissionFee),
-            "Fee return failed"
-        );
+        if (listing.isAuction) {
+            require(listing.highestBid == 0, "Cannot delist: has bids");
+        }
 
-        // Return Monkey
+        // Return NFT to seller
         monkeyContract.transferFrom(address(this), msg.sender, tokenId);
 
-        delete listings[tokenId];
+        // Update metrics
+        totalListings--;
+        if (listing.buyNowPrice == floorPrice) {
+            _updateFloorPrice();
+        }
 
+        delete listings[tokenId];
         emit MonkeyDelisted(tokenId, msg.sender);
+        _updateMetrics();
     }
 
-    /**
-     * @dev Buy a listed Monkey
-     * @param tokenId The ID of the Monkey to buy
-     */
-    function buyMonkey(uint256 tokenId) external {
+    function placeBid(uint256 tokenId, uint256 bidAmount) external {
+        Listing storage listing = listings[tokenId];
+        require(listing.isActive && listing.isAuction, "Not an active auction");
+        require(block.timestamp < listing.auctionEndTime, "Auction has ended");
+        require(
+            bidAmount >= listing.startingBidPrice,
+            "Bid below starting price"
+        );
+        require(
+            bidAmount > listing.highestBid,
+            "Bid not higher than current bid"
+        );
+        require(msg.sender != listing.seller, "Cannot bid on own listing");
+
+        // Check allowance and balance
+        require(
+            monkToken.allowance(msg.sender, address(this)) >= bidAmount,
+            "Insufficient allowance"
+        );
+        require(
+            monkToken.balanceOf(msg.sender) >= bidAmount,
+            "Insufficient balance"
+        );
+
+        // Return previous bid if exists
+        if (listing.highestBid > 0) {
+            monkToken.transfer(listing.highestBidder, listing.highestBid);
+        }
+
+        // Transfer new bid amount to contract
+        require(
+            monkToken.transferFrom(msg.sender, address(this), bidAmount),
+            "Bid transfer failed"
+        );
+
+        listing.highestBid = bidAmount;
+        listing.highestBidder = msg.sender;
+
+        if (bidAmount > bestOffer) {
+            bestOffer = bidAmount;
+        }
+
+        emit BidPlaced(tokenId, msg.sender, bidAmount);
+    }
+
+    function finalizeAuction(uint256 tokenId) external {
+        Listing storage listing = listings[tokenId];
+        require(listing.isActive && listing.isAuction, "Not an active auction");
+        require(
+            block.timestamp >= listing.auctionEndTime,
+            "Auction still ongoing"
+        );
+
+        if (listing.highestBidder != address(0)) {
+            // Calculate commission
+            uint256 commission = (listing.highestBid * COMMISSION_RATE) / 10000;
+            uint256 sellerPayment = listing.highestBid - commission;
+
+            // Transfer payment to seller
+            monkToken.transfer(listing.seller, sellerPayment);
+
+            // Transfer NFT to winner
+            monkeyContract.transferFrom(
+                address(this),
+                listing.highestBidder,
+                tokenId
+            );
+
+            totalFees += commission;
+            totalVolume += listing.highestBid;
+            emit AuctionEnded(
+                tokenId,
+                listing.highestBidder,
+                listing.highestBid
+            );
+        } else {
+            // Return NFT to seller if no bids
+            monkeyContract.transferFrom(address(this), listing.seller, tokenId);
+        }
+
+        totalListings--;
+        delete listings[tokenId];
+        _updateMetrics();
+    }
+
+    function buyNow(uint256 tokenId) external {
         Listing memory listing = listings[tokenId];
         require(listing.isActive, "Not listed");
         require(msg.sender != listing.seller, "Cannot buy own listing");
 
-        uint256 totalPrice = listing.price + commissionFee;
-
-        // Check if buyer has enough MONK and has approved the transfer
-        require(
-            monkToken.balanceOf(msg.sender) >= totalPrice,
-            "Insufficient MONK balance"
-        );
-        require(
-            monkToken.allowance(msg.sender, address(this)) >= totalPrice,
-            "Insufficient MONK allowance"
-        );
+        uint256 commission = (listing.buyNowPrice * COMMISSION_RATE) / 10000;
+        uint256 sellerPayment = listing.buyNowPrice - commission;
 
         // Transfer payment to seller
         require(
-            monkToken.transferFrom(msg.sender, listing.seller, listing.price),
+            monkToken.transferFrom(msg.sender, listing.seller, sellerPayment),
             "Payment transfer failed"
         );
-
-        // Transfer commission fee
+        // Transfer commission
         require(
-            monkToken.transferFrom(msg.sender, address(this), commissionFee),
-            "Fee transfer failed"
+            monkToken.transferFrom(msg.sender, address(this), commission),
+            "Commission transfer failed"
         );
 
-        // Transfer Monkey to buyer
+        // Transfer NFT to buyer
         monkeyContract.transferFrom(address(this), msg.sender, tokenId);
 
-        totalFees += commissionFee;
-        delete listings[tokenId];
+        totalFees += commission;
+        totalVolume += listing.buyNowPrice;
+        totalListings--;
 
-        emit MonkeySold(tokenId, listing.seller, msg.sender, listing.price);
-    }
+        // Refund highest bidder if exists
+        if (listing.highestBid > 0) {
+            monkToken.transfer(listing.highestBidder, listing.highestBid);
+        }
 
-    /**
-     * @dev Update the price of a listed Monkey
-     * @param tokenId The ID of the Monkey
-     * @param newPrice The new price
-     */
-    function updateListingPrice(uint256 tokenId, uint256 newPrice) external {
-        Listing storage listing = listings[tokenId];
-        require(listing.isActive, "Not listed");
-        require(listing.seller == msg.sender, "Not the seller");
-        require(newPrice > 0, "Price must be greater than 0");
-        require(
-            block.timestamp >= listing.lastPriceUpdate + priceUpdateCooldown,
-            "Price update cooldown active"
+        emit MonkeySold(
+            tokenId,
+            listing.seller,
+            msg.sender,
+            listing.buyNowPrice
         );
-
-        uint256 oldPrice = listing.price;
-        listing.price = newPrice;
-        listing.lastPriceUpdate = block.timestamp;
-
-        emit PriceUpdated(tokenId, oldPrice, newPrice);
+        delete listings[tokenId];
+        _updateMetrics();
     }
 
-    /**
-     * @dev Update price update cooldown period - only owner
-     * @param newCooldown New cooldown period in seconds
-     */
-    function updatePriceUpdateCooldown(uint256 newCooldown) external onlyOwner {
-        require(newCooldown > 0, "Cooldown must be greater than 0");
-        uint256 oldCooldown = priceUpdateCooldown;
-        priceUpdateCooldown = newCooldown;
-        emit CooldownPeriodUpdated(oldCooldown, newCooldown);
+    function _updateMetrics() internal {
+        uint256 totalMinted = monkeyContract.getTotalMinted();
+        uint256 percentageListed = totalMinted > 0
+            ? (totalListings * 100) / totalMinted
+            : 0;
+
+        uint256 uniqueOwners = _countUniqueOwners(totalMinted);
+
+        emit MetricsUpdated(
+            totalVolume,
+            floorPrice,
+            bestOffer,
+            percentageListed,
+            uniqueOwners
+        );
     }
 
-    /**
-     * @dev Withdraw accumulated fees - only owner
-     */
-    function withdrawFees() external onlyOwner {
-        uint256 amount = totalFees;
-        require(amount > 0, "No fees to withdraw");
+    function _updateFloorPrice() internal {
+        uint256 newFloorPrice = type(uint256).max;
+        uint256 totalMinted = monkeyContract.getTotalMinted();
 
-        totalFees = 0;
-        require(monkToken.transfer(owner(), amount), "Fee withdrawal failed");
+        for (uint256 i = 0; i < totalMinted; i++) {
+            if (
+                listings[i].isActive && listings[i].buyNowPrice < newFloorPrice
+            ) {
+                newFloorPrice = listings[i].buyNowPrice;
+            }
+        }
 
-        emit FeesWithdrawn(owner(), amount);
+        if (newFloorPrice != type(uint256).max) {
+            floorPrice = newFloorPrice;
+        }
     }
 
-    /**
-     * @dev Check if a Monkey is listed
-     * @param tokenId The ID of the Monkey
-     */
-    function isListed(uint256 tokenId) external view returns (bool) {
-        return listings[tokenId].isActive;
+    function getMarketMetrics() external view returns (MarketMetrics memory) {
+        uint256 totalMinted = monkeyContract.getTotalMinted();
+        uint256 percentageListed = totalMinted > 0
+            ? (totalListings * 100) / totalMinted
+            : 0;
+
+        return
+            MarketMetrics({
+                totalVolume: totalVolume,
+                floorPrice: floorPrice,
+                bestOffer: bestOffer,
+                percentageListed: percentageListed,
+                uniqueOwners: _countUniqueOwners(totalMinted)
+            });
     }
 
-    /**
-     * @dev Get listing details
-     * @param tokenId The ID of the Monkey
-     */
+    function _countUniqueOwners(
+        uint256 totalSupply
+    ) internal view returns (uint256) {
+        address[] memory owners = new address[](totalSupply);
+        uint256 count = 0;
+
+        // Collect all owners
+        for (uint256 i = 0; i < totalSupply; i++) {
+            address owner = monkeyContract.ownerOf(i);
+            bool isNew = true;
+
+            // Check if owner is already in our array
+            for (uint256 j = 0; j < count; j++) {
+                if (owners[j] == owner) {
+                    isNew = false;
+                    break;
+                }
+            }
+
+            if (isNew) {
+                owners[count] = owner;
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     function getListingDetails(
         uint256 tokenId
     )
@@ -282,28 +369,33 @@ contract Bazaar is Ownable {
         view
         returns (
             address seller,
-            uint256 price,
+            uint256 buyNowPrice,
+            uint256 startingBidPrice,
+            uint256 highestBid,
+            address highestBidder,
+            uint256 auctionEndTime,
             bool isActive,
-            uint256 lastPriceUpdate
+            bool isAuction
         )
     {
         Listing memory listing = listings[tokenId];
         return (
             listing.seller,
-            listing.price,
+            listing.buyNowPrice,
+            listing.startingBidPrice,
+            listing.highestBid,
+            listing.highestBidder,
+            listing.auctionEndTime,
             listing.isActive,
-            listing.lastPriceUpdate
+            listing.isAuction
         );
     }
 
-    /**
-     * @dev Check if price update is allowed for a token
-     * @param tokenId The ID of the Monkey
-     */
-    function canUpdatePrice(uint256 tokenId) external view returns (bool) {
-        Listing memory listing = listings[tokenId];
-        return
-            listing.isActive &&
-            block.timestamp >= listing.lastPriceUpdate + priceUpdateCooldown;
+    function withdrawFees() external onlyOwner {
+        uint256 amount = totalFees;
+        require(amount > 0, "No fees to withdraw");
+        totalFees = 0;
+        require(monkToken.transfer(owner(), amount), "Fee withdrawal failed");
+        emit FeesWithdrawn(owner(), amount);
     }
 }
