@@ -2,21 +2,20 @@
 pragma solidity ^0.8.19;
 
 import "./ERC20.sol";
+import "./Ownable.sol";
 
 /**
  * @title Monk
  * @dev Monk is the ERC20 token used for Monkey Brothers
  */
-contract Monk is ERC20("MONK", "MK") {
+contract Monk is ERC20("MONK", "MK"), Ownable {
     uint256 supplyLimit;
     uint256 currentSupply;
-    address owner;
 
     /**
      * @dev Sets the values for owner of the contract and supply limit
      */
     constructor() {
-        owner = msg.sender;
         supplyLimit = 1000000 * 1000000000000000000;
     }
 

@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import "./Ownable.sol";
+
 /**
  * @title Player Details
  * @dev Stores player's level and experience
  */
-contract PlayerDetails {
-    address owner;
+contract PlayerDetails is Ownable {
     address public arenaContract;
 
     // Mapping of player address to their details
@@ -20,19 +21,10 @@ contract PlayerDetails {
 
     modifier onlyAuthorized() {
         require(
-            msg.sender == owner || msg.sender == arenaContract,
+            msg.sender == owner() || msg.sender == arenaContract,
             "Not authorized to perform this action"
         );
         _;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only the owner can perform this action");
-        _;
-    }
-
-    constructor() {
-        owner = msg.sender;
     }
 
     function setArenaContract(address _arenaContract) external onlyOwner {
