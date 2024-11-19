@@ -27,11 +27,14 @@ contract MonkeyGacha is Ownable {
         uint256 maxHealth;
     }
 
+    struct TypeNames {
+        string[] firstNames;
+        string[] lastNames;
+    }
+
     mapping(uint8 => StatRange) public rarityStats;
     mapping(address => bool) public hasClaimedStarterPack;
-
-    string[] private firstNames;
-    string[] private lastNames;
+    mapping(uint8 => TypeNames) private typeNames;
 
     event MonkeyDrawn(
         address indexed player,
@@ -66,11 +69,18 @@ contract MonkeyGacha is Ownable {
         uint16 legendaryChance
     );
 
+    event NamesAdded(
+        uint8 powerType,
+        uint256 firstNamesAdded,
+        uint256 lastNamesAdded
+    );
+
     constructor(address _monkToken, address _monkeyNFT) {
         require(
             _monkToken != address(0) && _monkeyNFT != address(0),
             "Invalid addresses"
         );
+
         monkToken = Monk(_monkToken);
         monkeyNFT = Monkeys(_monkeyNFT);
 
@@ -84,8 +94,6 @@ contract MonkeyGacha is Ownable {
             85,
             94
         );
-
-        _initializeNames();
     }
 
     /**
@@ -118,22 +126,19 @@ contract MonkeyGacha is Ownable {
 
         // Generate three monkeys (one of each type)
         uint256[] memory monkeyIds = new uint256[](3);
-        string[3] memory names = [
-            "Fire Novice",
-            "Water Novice",
-            "Earth Novice"
-        ];
-
         for (uint8 i = 0; i < 3; i++) {
             // Generate balanced stats for starter monkeys
-            uint256 attack = 10 + _random(6); // Attack between 10-15
-            uint256 health = 45 + _random(6); // Health between 45-50
+            uint256 attack = 10 + _random(6);
+            uint256 health = 45 + _random(6);
+
+            // MODIFIED: Now using type-specific name generation
+            string memory name = _generateName(i);
 
             monkeyIds[i] = monkeyNFT.mintMonkey(
                 msg.sender,
-                names[i],
+                name,
                 uint8(Monkeys.Rarity.Common),
-                i, // PowerType (0=Fire, 1=Water, 2=Earth)
+                i,
                 attack,
                 health
             );
@@ -162,7 +167,7 @@ contract MonkeyGacha is Ownable {
         // Generate random monkey attributes
         uint8 rarity = _determineRarity();
         uint8 powerType = uint8(_random(uint256(Monkeys.PowerType.Earth) + 1));
-        string memory name = _generateName();
+        string memory name = _generateName(powerType);
 
         // Generate stats based on rarity
         StatRange memory range = rarityStats[rarity];
@@ -224,32 +229,50 @@ contract MonkeyGacha is Ownable {
             ) % max;
     }
 
-    function _generateName() internal view returns (string memory) {
-        string memory firstName = firstNames[_random(firstNames.length)];
-        string memory lastName = lastNames[_random(lastNames.length)];
-        return string(abi.encodePacked(firstName, " ", lastName));
+    function addNamesForType(
+        uint8 powerType,
+        string[] calldata _firstNames,
+        string[] calldata _lastNames
+    ) external onlyOwner {
+        require(
+            powerType <= uint8(Monkeys.PowerType.Earth),
+            "Invalid power type"
+        );
+
+        // Initialize arrays if empty
+        if (typeNames[powerType].firstNames.length == 0) {
+            typeNames[powerType].firstNames = _firstNames;
+            typeNames[powerType].lastNames = _lastNames;
+        } else {
+            // Add to existing arrays
+            for (uint i = 0; i < _firstNames.length; i++) {
+                require(bytes(_firstNames[i]).length > 0, "Empty first name");
+                typeNames[powerType].firstNames.push(_firstNames[i]);
+            }
+
+            for (uint i = 0; i < _lastNames.length; i++) {
+                require(bytes(_lastNames[i]).length > 0, "Empty last name");
+                typeNames[powerType].lastNames.push(_lastNames[i]);
+            }
+        }
     }
 
-    function _initializeNames() internal {
-        firstNames = [
-            "Sun",
-            "Cloud",
-            "Storm",
-            "Thunder",
-            "Lightning",
-            "Rain",
-            "Wind",
-            "Star"
+    function _generateName(
+        uint8 powerType
+    ) internal view returns (string memory) {
+        TypeNames storage names = typeNames[powerType];
+        require(
+            names.firstNames.length > 0 && names.lastNames.length > 0,
+            "Names not initialized"
+        );
+
+        string memory firstName = names.firstNames[
+            _random(names.firstNames.length)
         ];
-        lastNames = [
-            "Warrior",
-            "Guardian",
-            "Protector",
-            "Knight",
-            "Champion",
-            "Hero",
-            "Legend"
+        string memory lastName = names.lastNames[
+            _random(names.lastNames.length)
         ];
+        return string(abi.encodePacked(firstName, " ", lastName));
     }
 
     // View functions
@@ -320,17 +343,16 @@ contract MonkeyGacha is Ownable {
         );
     }
 
-    function addNames(
-        string[] calldata _firstNames,
-        string[] calldata _lastNames
-    ) external onlyOwner {
-        for (uint i = 0; i < _firstNames.length; i++) {
-            require(bytes(_firstNames[i]).length > 0, "Empty first name");
-            firstNames.push(_firstNames[i]);
-        }
-        for (uint i = 0; i < _lastNames.length; i++) {
-            require(bytes(_lastNames[i]).length > 0, "Empty last name");
-            lastNames.push(_lastNames[i]);
-        }
+    function getNamesForType(
+        uint8 powerType
+    ) external view returns (string[] memory, string[] memory) {
+        require(
+            powerType <= uint8(Monkeys.PowerType.Earth),
+            "Invalid power type"
+        );
+        return (
+            typeNames[powerType].firstNames,
+            typeNames[powerType].lastNames
+        );
     }
 }
