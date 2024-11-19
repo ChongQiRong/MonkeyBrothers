@@ -4,6 +4,8 @@ const MonkeyGacha = artifacts.require("MonkeyGacha");
 const PlayerDetails = artifacts.require("PlayerDetails");
 const Arena = artifacts.require("Arena");
 const Bazaar = artifacts.require("Bazaar");
+const fs = require('fs');
+const path = require('path');
 
 module.exports = async (deployer, network, accounts) => {
   // Deploy Monk token first as it's needed by other contracts
@@ -40,4 +42,41 @@ module.exports = async (deployer, network, accounts) => {
 
   // Deploy Bazaar
   await deployer.deploy(Bazaar, monkeysInstance.address, monkInstance.address);
+
+   // Load names from JSON file
+   const namesPath = path.join(__dirname, '..', 'data', 'monkeyNames.json');
+  
+   // Add error handling
+   try {
+     const namesData = JSON.parse(fs.readFileSync(namesPath, 'utf8'));
+     console.log('Successfully loaded names data');
+ 
+     // Initialize names for each type
+     console.log('Initializing Fire type names...');
+     await gachaInstance.addNamesForType(
+       0, // Fire
+       namesData.fire.firstNames,
+       namesData.fire.lastNames
+     );
+ 
+     console.log('Initializing Water type names...');
+     await gachaInstance.addNamesForType(
+       1, // Water
+       namesData.water.firstNames,
+       namesData.water.lastNames
+     );
+ 
+     console.log('Initializing Earth type names...');
+     await gachaInstance.addNamesForType(
+       2, // Earth
+       namesData.earth.firstNames,
+       namesData.earth.lastNames
+     );
+ 
+     console.log('Name initialization complete!');
+   } catch (error) {
+     console.error('Error loading or processing names:', error);
+     console.error('Expected path:', namesPath);
+     throw error;
+   }
 };
