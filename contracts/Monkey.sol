@@ -39,7 +39,7 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
     enum PowerType {
         Fire,
         Water,
-        Earth
+        Grass
     }
 
     //Structure for properties of each Monkey card
@@ -214,7 +214,7 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         require(msg.sender == gachaContract);
         require(to != address(0), "Cannot mint to zero address");
         require(rarity <= uint8(Rarity.Legendary), "Invalid rarity");
-        require(powerType <= uint8(PowerType.Earth), "Invalid power type");
+        require(powerType <= uint8(PowerType.Grass), "Invalid power type");
 
         uint256 tokenId = _tokenIdCounter;
         _mint(to, tokenId);

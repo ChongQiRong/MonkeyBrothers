@@ -166,7 +166,7 @@ contract MonkeyGacha is Ownable {
 
         // Generate random monkey attributes
         uint8 rarity = _determineRarity();
-        uint8 powerType = uint8(_random(uint256(Monkeys.PowerType.Earth) + 1));
+        uint8 powerType = uint8(_random(uint256(Monkeys.PowerType.Grass) + 1));
         string memory name = _generateName(powerType);
 
         // Generate stats based on rarity
@@ -235,7 +235,7 @@ contract MonkeyGacha is Ownable {
         string[] calldata _lastNames
     ) external onlyOwner {
         require(
-            powerType <= uint8(Monkeys.PowerType.Earth),
+            powerType <= uint8(Monkeys.PowerType.Grass),
             "Invalid power type"
         );
 
@@ -347,7 +347,7 @@ contract MonkeyGacha is Ownable {
         uint8 powerType
     ) external view returns (string[] memory, string[] memory) {
         require(
-            powerType <= uint8(Monkeys.PowerType.Earth),
+            powerType <= uint8(Monkeys.PowerType.Grass),
             "Invalid power type"
         );
         return (

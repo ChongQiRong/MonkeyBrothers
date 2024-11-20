@@ -68,9 +68,9 @@ module.exports = async (deployer, network, accounts) => {
  
      console.log('Initializing Earth type names...');
      await gachaInstance.addNamesForType(
-       2, // Earth
-       namesData.earth.firstNames,
-       namesData.earth.lastNames
+       2, // Grass
+       namesData.grass.firstNames,
+       namesData.grass.lastNames
      );
  
      console.log('Name initialization complete!');

@@ -140,14 +140,14 @@ contract Arena {
     ) internal pure returns (bool) {
         if (
             attacker == Monkeys.PowerType.Fire &&
-            defender == Monkeys.PowerType.Earth
+            defender == Monkeys.PowerType.Grass
         ) return true;
         if (
             attacker == Monkeys.PowerType.Water &&
             defender == Monkeys.PowerType.Fire
         ) return true;
         if (
-            attacker == Monkeys.PowerType.Earth &&
+            attacker == Monkeys.PowerType.Grass &&
             defender == Monkeys.PowerType.Water
         ) return true;
         return false;
