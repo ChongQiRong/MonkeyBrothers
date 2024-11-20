@@ -7,6 +7,8 @@ import "./Monk.sol";
 
 /**
  * @title Fight
+ * @author MonkeyBrothers
+ * @notice This contract handles battle mechanices between Monkey NFTs
  * @dev Fight is the main functionality of our game, where an array of 5 Beasts fight with another 5 Beasts and
  * and the winner wins gems based on the difference in damage dealt to the opponent.
  */
@@ -18,7 +20,8 @@ contract Arena {
     address owner;
 
     /**
-     * Sets the values for the owner of contract, gemContract, cardContract and mmrContract
+     * @notice Initializes the Arena contract with necessary dependencies
+     * @dev Sets up contract references and initializes the owner
      * @param _monkContract Address of deployed Monk contract
      * @param _monkeyContract Address of deployed Monkeys contract
      * @param _playerDetailsContract Address of deployed PlayerDetails contract
@@ -34,17 +37,22 @@ contract Arena {
         playerDetailsContract = PlayerDetails(_playerDetailsContract);
     }
 
-    // owner => array of cards (for players in queue)
+    // State variables with documentation
+    // @notice Stores the Monkeys chosen by players in queue
     mapping(address => uint256[]) internal _cardsOfPlayersInQueue;
-    // owner => scale
-    mapping(address => uint256) internal _scale;
 
+    // Events with documentation
+    // @notice Emitted when a plater enters the matchmaking queue
     event inQueue(address player);
+    // @notice Emitted when a battle i completed, showing damage difference
     event damageDifference(uint256 diff);
+    // @notice Emitted when a battle has a winner
     event outcomeWin(address winner);
+    // @notice Emitted when a battle ends in a draw
     event outcomeDraw();
 
     /**
+     * @notice Initiates a battle or joins the queue
      * @dev Places a user to the matchmaking queue if queue is empty, else battle with the person at the top of the queue
      * @param monkeys Array of 3 monkey token IDs in the order they will battle
      */
@@ -107,9 +115,11 @@ contract Arena {
     }
 
     /**
-     * @dev Getter for the power type of 2 Monkeys
+     * @notice Calculates power type advantages between two monkeys
+     * @dev Returns power multipliers for both monkeys based on their types
      * @param myMonkey ID of my Monkey
      * @param enemyMonkey ID of enemy Monkey
+     * @return Array of power multipliers for both Monkeys
      */
     function getPowerTypes(
         uint256 myMonkey,
@@ -134,6 +144,13 @@ contract Arena {
         return powerTypes;
     }
 
+    /**
+     * @notice Determines if one power type is effective against another
+     * @dev Implements the type advantage system (Fire > Grass > Water > Fire)
+     * @param attacker Power type of the attacking monkey
+     * @param defender Power type of the defending monkey
+     * @return bool True if attacker has advantage over defender
+     */
     function isEffectiveAgainst(
         Monkeys.PowerType attacker,
         Monkeys.PowerType defender
@@ -154,7 +171,8 @@ contract Arena {
     }
 
     /**
-     * @dev Withdraw gem commissions from fight back to owner of contract
+     * @notice Withdraws gem comissions to contract owner
+     * @dev Withdraw gem commissions from fight back to owner address
      */
     function withdraw() public {
         uint256 amt = monkContract.checkMonks();
@@ -162,7 +180,9 @@ contract Arena {
     }
 
     /**
+     * @notice Verifies monkey ownership
      * @dev Modifier to check if all cards belong to player
+     * @param monkeys Array of monkey token IDs to verify ownership
      */
     modifier isOwnerOfMonkeys(uint256[] memory monkeys) {
         for (uint i = 0; i < monkeys.length; i++) {
@@ -175,7 +195,9 @@ contract Arena {
     }
 
     /**
+     * @notice Validates monkey array length
      * @dev Modifier to check if number of cards are correct in the array of card ids
+     * @param monkeys Array of monkey token IDs to verify length
      */
     modifier isCorrectNumMonkeys(uint256[] memory monkeys) {
         require(monkeys.length == 3, "Must use exactly 3 monkeys");

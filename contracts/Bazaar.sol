@@ -5,18 +5,43 @@ import "./Monkey.sol";
 import "./Monk.sol";
 import "./Ownable.sol";
 
+/**
+ * @title Bazaar
+ * @author MonkeyBrothers
+ * @notice This contract implements a marketplace for trading Monkey NFTs
+ * @dev Handles listings, auctions, and trades of Monkey NFTs using Monk tokens as currency
+ */
 contract Bazaar is Ownable {
     Monkeys public monkeyContract;
     Monk public monkToken;
 
-    uint256 public constant COMMISSION_RATE = 200; // 2% (in basis points)
+    /// @notice Commission rate in basis points (2%)
+    uint256 public constant COMMISSION_RATE = 200;
+    /// @notice Duration of auctions in seconds (12 hours)
     uint256 public constant AUCTION_DURATION = 12 hours;
+
+    /// @notice Total trading volume in Monk tokens
     uint256 public totalVolume;
+    /// @notice Current floor price of listed Monkeys
     uint256 public floorPrice;
+    /// @notice Highest current offer across all listings
     uint256 public bestOffer;
+    /// @notice Total number of active listings
     uint256 public totalListings;
+    /// @notice Total fees collected from trades
     uint256 public totalFees;
 
+    /**
+     * @notice Structure for marketplace listings
+     * @param seller Address of the Monkey owner
+     * @param buyNowPrice Instant purchase price
+     * @param startingBidPrice Minimum bid price for auction
+     * @param highestBid Current highest bid
+     * @param highestBidder Address of highest bidder
+     * @param auctionEndTime Timestamp when auction ends
+     * @param isActive Whether listing is currently active
+     * @param isAuction Whether listing is auction format
+     */
     struct Listing {
         address seller;
         uint256 buyNowPrice;
@@ -28,6 +53,14 @@ contract Bazaar is Ownable {
         bool isAuction;
     }
 
+    /**
+     * @notice Structure for marketplace metrics
+     * @param totalVolume Total trading volume
+     * @param floorPrice Lowest listed price
+     * @param bestOffer Highest current bid
+     * @param percentageListed Percentage of total Monkeys listed
+     * @param uniqueOwners Number of unique Monkey holders
+     */
     struct MarketMetrics {
         uint256 totalVolume;
         uint256 floorPrice;
@@ -36,13 +69,23 @@ contract Bazaar is Ownable {
         uint256 uniqueOwners;
     }
 
-    // TokenId => Listing
+    /// @notice Maps token IDs to their listing information
+    /// @dev Stores all active and inactive listings
     mapping(uint256 => Listing) public listings;
-    // Address => number of NFTs owned
+
+    /// @notice Maps addresses to their owned NFT count
+    /// @dev Tracks how many Monkeys each address owns
     mapping(address => uint256) public ownershipCount;
-    // Bidder => TokenId => Bid amount
+
+    /// @notice Maps bidders and token IDs to bid amounts
+    /// @dev Two-level mapping tracking all bids: bidder => tokenId => amount
     mapping(address => mapping(uint256 => uint256)) public bids;
 
+    /// @notice Emitted when a Monkey is listed on the marketplace
+    /// @param tokenId The ID of the listed Monkey
+    /// @param seller The address of the seller
+    /// @param buyNowPrice The instant purchase price
+    /// @param startingBidPrice The minimum bid price for auction
     event MonkeyListed(
         uint256 indexed tokenId,
         address indexed seller,
@@ -50,8 +93,16 @@ contract Bazaar is Ownable {
         uint256 startingBidPrice
     );
 
+    /// @notice Emitted when a Monkey is removed from the marketplace
+    /// @param tokenId The ID of the delisted Monkey
+    /// @param seller The address of the seller
     event MonkeyDelisted(uint256 indexed tokenId, address indexed seller);
 
+    /// @notice Emitted when a Monkey is sold via buy now
+    /// @param tokenId The ID of the sold Monkey
+    /// @param seller The address of the seller
+    /// @param buyer The address of the buyer
+    /// @param price The final sale price
     event MonkeySold(
         uint256 indexed tokenId,
         address indexed seller,
@@ -59,18 +110,32 @@ contract Bazaar is Ownable {
         uint256 price
     );
 
+    /// @notice Emitted when a bid is placed on a Monkey
+    /// @param tokenId The ID of the Monkey
+    /// @param bidder The address of the bidder
+    /// @param amount The bid amount
     event BidPlaced(
         uint256 indexed tokenId,
         address indexed bidder,
         uint256 amount
     );
 
+    /// @notice Emitted when an auction ends
+    /// @param tokenId The ID of the Monkey
+    /// @param winner The address of the auction winner
+    /// @param winningBid The winning bid amount
     event AuctionEnded(
         uint256 indexed tokenId,
         address indexed winner,
         uint256 winningBid
     );
 
+    /// @notice Emitted when marketplace metrics are updated
+    /// @param totalVolume Updated total trading volume
+    /// @param floorPrice Updated floor price
+    /// @param bestOffer Updated highest bid
+    /// @param percentageListed Updated percentage of total Monkeys listed
+    /// @param uniqueOwners Updated number of unique owners
     event MetricsUpdated(
         uint256 totalVolume,
         uint256 floorPrice,
@@ -79,8 +144,17 @@ contract Bazaar is Ownable {
         uint256 uniqueOwners
     );
 
+    /// @notice Emitted when accumulated fees are withdrawn
+    /// @param owner Address receiving the fees
+    /// @param amount Amount of fees withdrawn
     event FeesWithdrawn(address indexed owner, uint256 amount);
 
+    /**
+     * @notice Initializes the Bazaar marketplace
+     * @dev Sets up contract references and initializes floor price to maximum value
+     * @param _monkeyContract Address of the Monkeys NFT contract
+     * @param _monkToken Address of the Monk token contract
+     */
     constructor(address _monkeyContract, address _monkToken) {
         require(
             _monkeyContract != address(0) && _monkToken != address(0),
@@ -91,6 +165,13 @@ contract Bazaar is Ownable {
         floorPrice = type(uint256).max; // Initialize to max value
     }
 
+    /**
+     * @notice Lists a Monkey for sale with auction and buy now options
+     * @dev Transfers NFT to contract and creates listing
+     * @param tokenId The ID of the Monkey to list
+     * @param buyNowPrice The instant purchase price
+     * @param startingBidPrice The minimum bid price for auction
+     */
     function listMonkey(
         uint256 tokenId,
         uint256 buyNowPrice,
@@ -135,6 +216,11 @@ contract Bazaar is Ownable {
         _updateMetrics();
     }
 
+    /**
+     * @notice Removes a Monkey listing from the marketplace
+     * @dev Returns NFT to seller if no bids exist
+     * @param tokenId The ID of the Monkey to delist
+     */
     function delistMonkey(uint256 tokenId) external {
         Listing storage listing = listings[tokenId];
         require(listing.isActive, "Not listed");
@@ -158,6 +244,12 @@ contract Bazaar is Ownable {
         _updateMetrics();
     }
 
+    /**
+     * @notice Places a bid on a listed Monkey
+     * @dev Handles bid transfers and updates highest bid
+     * @param tokenId The ID of the Monkey to bid on
+     * @param bidAmount The amount of MONK tokens to bid
+     */
     function placeBid(uint256 tokenId, uint256 bidAmount) external {
         Listing storage listing = listings[tokenId];
         require(listing.isActive && listing.isAuction, "Not an active auction");
@@ -203,6 +295,11 @@ contract Bazaar is Ownable {
         emit BidPlaced(tokenId, msg.sender, bidAmount);
     }
 
+    /**
+     * @notice Finalizes an auction after its end time
+     * @dev Transfers NFT and payments, updates metrics
+     * @param tokenId The ID of the Monkey auction to finalize
+     */
     function finalizeAuction(uint256 tokenId) external {
         Listing storage listing = listings[tokenId];
         require(listing.isActive && listing.isAuction, "Not an active auction");
@@ -243,6 +340,11 @@ contract Bazaar is Ownable {
         _updateMetrics();
     }
 
+    /**
+     * @notice Purchases a Monkey at its buy now price
+     * @dev Handles payment transfers and updates metrics
+     * @param tokenId The ID of the Monkey to purchase
+     */
     function buyNow(uint256 tokenId) external {
         Listing memory listing = listings[tokenId];
         require(listing.isActive, "Not listed");
@@ -284,6 +386,10 @@ contract Bazaar is Ownable {
         _updateMetrics();
     }
 
+    /**
+     * @notice Updates marketplace metrics after changes
+     * @dev Calculates and emits updated market statistics
+     */
     function _updateMetrics() internal {
         uint256 totalMinted = monkeyContract.getTotalMinted();
         uint256 percentageListed = totalMinted > 0
@@ -301,6 +407,10 @@ contract Bazaar is Ownable {
         );
     }
 
+    /**
+     * @notice Updates the floor price after changes to listings
+     * @dev Scans all active listings to find new floor price
+     */
     function _updateFloorPrice() internal {
         uint256 newFloorPrice = type(uint256).max;
         uint256 totalMinted = monkeyContract.getTotalMinted();
@@ -318,6 +428,11 @@ contract Bazaar is Ownable {
         }
     }
 
+    /**
+     * @notice Retrieves current marketplace metrics
+     * @dev Calculates real-time market statistics
+     * @return MarketMetrics struct containing current market data
+     */
     function getMarketMetrics() external view returns (MarketMetrics memory) {
         uint256 totalMinted = monkeyContract.getTotalMinted();
         uint256 percentageListed = totalMinted > 0
@@ -334,6 +449,12 @@ contract Bazaar is Ownable {
             });
     }
 
+    /**
+     * @notice Counts unique Monkey owners
+     * @dev Iterates through all Monkeys to find unique addresses
+     * @param totalSupply Total number of minted Monkeys
+     * @return Number of unique addresses holding Monkeys
+     */
     function _countUniqueOwners(
         uint256 totalSupply
     ) internal view returns (uint256) {
@@ -362,6 +483,19 @@ contract Bazaar is Ownable {
         return count;
     }
 
+    /**
+     * @notice Retrieves detailed information about a listing
+     * @dev Returns all listing parameters
+     * @param tokenId The ID of the Monkey listing to query
+     * @return seller Address of the seller
+     * @return buyNowPrice Instant purchase price
+     * @return startingBidPrice Minimum bid price
+     * @return highestBid Current highest bid
+     * @return highestBidder Address of highest bidder
+     * @return auctionEndTime Timestamp when auction ends
+     * @return isActive Whether listing is active
+     * @return isAuction Whether listing is auction format
+     */
     function getListingDetails(
         uint256 tokenId
     )
@@ -391,6 +525,10 @@ contract Bazaar is Ownable {
         );
     }
 
+    /**
+     * @notice Withdraws accumulated marketplace fees
+     * @dev Only callable by contract owner
+     */
     function withdrawFees() external onlyOwner {
         uint256 amount = totalFees;
         require(amount > 0, "No fees to withdraw");

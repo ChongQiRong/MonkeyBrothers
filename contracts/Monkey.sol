@@ -7,42 +7,65 @@ import "../contracts/ERC721/IERC721Metadata.sol";
 import "../contracts/ERC721/IERC721Receiver.sol";
 import "./Ownable.sol";
 
+/**
+ * @title Monkeys
+ * @author MonkeyBrothers
+ * @notice NFT implementation for Monkey Brothers game characters
+ * @dev ERC721 token with additional gaming attributes and metadata
+ */
 contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
-    //Token name
+    /// @notice Name of the NFT collection
     string private _name;
-    //Token symbol
+    /// @notice Symbol of the NFT collection
     string private _symbol;
-    //Base URI for metadata
+    /// @notice Base URI for token metadata
     string private _baseTokenURI;
-    //Gacha contract address
+    /// @notice Address of the gacha contract authorized to mint Monkeys
     address public gachaContract;
-    // Counter for token IDs
+    /// @notice Counter for minted token IDs
     uint256 private _tokenIdCounter;
 
-    //Token ID to owner address
+    /// @notice Maps token ID to owner address
     mapping(uint256 => address) private _owners;
-    //Owner address to token count
+    /// @notice Maps owner address to token count
     mapping(address => uint256) private _balances;
-    //Token ID to approved address
+    /// @notice Maps token ID to approved address
     mapping(uint256 => address) private _tokenApprovals;
-    //Owner to operator approvals
+    /// @notice Maps owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
-    //Token ID to Monkey
+    /// @notice Maps token ID to Monkey data
     mapping(uint256 => Monkey) private _monkeys;
 
+    /**
+     * @notice Enumeration defining possible rarity levels
+     * @dev Used to determine Monkey stats and abilities
+     */
     enum Rarity {
         Common,
         Rare,
         Epic,
         Legendary
     }
+
+    /**
+     * @notice Enumeration defining possible element types
+     * @dev Used in battle mechanics for type advantages
+     */
     enum PowerType {
         Fire,
         Water,
         Grass
     }
 
-    //Structure for properties of each Monkey card
+    /**
+     * @notice Structure containing Monkey attributes
+     * @param id Unique identifier of the Monkey
+     * @param name Name of the Monkey
+     * @param rarity Rarity level of the Monkey
+     * @param powerType Element type of the Monkey
+     * @param attack Attack stat of the Monkey
+     * @param health Health stat of the Monkey
+     */
     struct Monkey {
         uint256 id;
         string name;
@@ -52,6 +75,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         uint256 health;
     }
 
+    /**
+     * @notice Initializes the Monkeys NFT contract
+     * @dev Sets up initial values and registers ERC165 interfaces
+     * @param _gachaContract Address of the gacha contract
+     * @param baseURI Base URI for token metadata
+     */
     constructor(address _gachaContract, string memory baseURI) Ownable() {
         _name = "Monkey Brothers";
         _symbol = "MONKBRO";
@@ -66,11 +95,16 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         _registerInterface(type(IERC721Metadata).interfaceId);
     }
 
+    /// @notice Emitted when the gacha contract address is updated
     event GachaContractUpdated(
         address indexed oldGacha,
         address indexed newGacha
     );
+
+    /// @notice Emitted when the base URI is updated
     event BaseURIUpdated(string oldURI, string newBaseURI);
+
+    /// @notice Emitted when a new Monkey is created
     event MonkeyCreated(
         uint256 indexed tokenId,
         string name,
@@ -79,14 +113,27 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
     );
 
     // ERC721Metadata implementation
+    /**
+     * @notice Returns the name of the token collection
+     * @return string Name of the collection
+     */
     function name() public view virtual override returns (string memory) {
         return _name;
     }
 
+    /**
+     * @notice Returns the symbol of the token collection
+     * @return string Symbol of the collection
+     */
     function symbol() public view virtual override returns (string memory) {
         return _symbol;
     }
 
+    /**
+     * @notice Returns the metadata URI for a given token
+     * @param tokenId ID of the token to get URI for
+     * @return string Metadata URI for the token
+     */
     function tokenURI(
         uint256 tokenId
     ) public view virtual override returns (string memory) {
@@ -101,6 +148,11 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
                 : "";
     }
 
+    /**
+     * @notice Updates the base URI for token metadata
+     * @dev Only callable by contract owner
+     * @param newBaseURI New base URI to set
+     */
     function setBaseURI(string memory newBaseURI) external onlyOwner {
         require(bytes(newBaseURI).length > 0, "Empty base URI");
         string memory oldURI = _baseTokenURI;
@@ -108,6 +160,11 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         emit BaseURIUpdated(oldURI, newBaseURI);
     }
 
+    /**
+     * @notice Updates the gacha contract address
+     * @dev Only callable by contract owner
+     * @param _newGachaContract New gacha contract address
+     */
     function setGachaContract(address _newGachaContract) external onlyOwner {
         require(_newGachaContract != address(0), "Invalid gacha address");
         emit GachaContractUpdated(gachaContract, _newGachaContract);
@@ -115,6 +172,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
     }
 
     // ERC721 implementation
+    /**
+     * @notice Gets the balance of tokens owned by an address
+     * @dev Throws if the address is zero
+     * @param owner Address to query balance for
+     * @return uint256 Number of tokens owned by the address
+     */
     function balanceOf(
         address owner
     ) public view virtual override returns (uint256) {
@@ -125,6 +188,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         return _balances[owner];
     }
 
+    /**
+     * @notice Gets the owner of a specific token
+     * @dev Throws if the token does not exist
+     * @param tokenId ID of the token to query
+     * @return address Current owner of the token
+     */
     function ownerOf(
         uint256 tokenId
     ) public view virtual override returns (address) {
@@ -133,6 +202,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         return owner;
     }
 
+    /**
+     * @notice Approves an address to transfer a specific token
+     * @dev Caller must be owner or approved operator
+     * @param to Address to be approved
+     * @param tokenId ID of the token to be approved
+     */
     function approve(address to, uint256 tokenId) public virtual override {
         address owner = ownerOf(tokenId);
         require(to != owner, "ERC721: Approval to current owner");
@@ -144,6 +219,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         emit Approval(owner, to, tokenId);
     }
 
+    /**
+     * @notice Sets or unsets an operator as approved for all tokens
+     * @dev Allows/disallows operator to manage all of msg.sender's tokens
+     * @param operator Address to modify approval status for
+     * @param approved True to approve, false to revoke approval
+     */
     function setApprovalForAll(
         address operator,
         bool approved
@@ -153,6 +234,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         emit ApprovalForAll(msg.sender, operator, approved);
     }
 
+    /**
+     * @notice Gets the approved address for a token
+     * @dev Throws if the token does not exist
+     * @param tokenId ID of the token to query
+     * @return address Currently approved address for the token
+     */
     function getApproved(
         uint256 tokenId
     ) public view virtual override returns (address) {
@@ -163,6 +250,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         return _tokenApprovals[tokenId];
     }
 
+    /**
+     * @notice Checks if an operator is approved for all tokens of an owner
+     * @param owner Address that owns the tokens
+     * @param operator Address to check approval status for
+     * @return bool True if the operator is approved for all tokens
+     */
     function isApprovedForAll(
         address owner,
         address operator
@@ -170,6 +263,13 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         return _operatorApprovals[owner][operator];
     }
 
+    /**
+     * @notice Transfers a token between addresses
+     * @dev Caller must be owner or approved
+     * @param from Address to transfer from
+     * @param to Address to transfer to
+     * @param tokenId ID of the token to transfer
+     */
     function transferFrom(
         address from,
         address to,
@@ -182,6 +282,13 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         _transfer(from, to, tokenId);
     }
 
+    /**
+     * @notice Safely transfers a token between addresses
+     * @dev Calls safeTransferFrom with empty data
+     * @param from Address to transfer from
+     * @param to Address to transfer to
+     * @param tokenId ID of the token to transfer
+     */
     function safeTransferFrom(
         address from,
         address to,
@@ -190,6 +297,14 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         safeTransferFrom(from, to, tokenId, "");
     }
 
+    /**
+     * @notice Safely transfers a token between addresses with additional data
+     * @dev Checks if receiver is a contract and if it can handle ERC721 tokens
+     * @param from Address to transfer from
+     * @param to Address to transfer to
+     * @param tokenId ID of the token to transfer
+     * @param data Additional data to pass to receiver contract
+     */
     function safeTransferFrom(
         address from,
         address to,
@@ -203,6 +318,17 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         _safeTransfer(from, to, tokenId, data);
     }
 
+    /**
+     * @notice Mints a new Monkey NFT with specified attributes
+     * @dev Only callable by the gacha contract
+     * @param to Address to receive the minted Monkey
+     * @param monkeyName Name of the new Monkey
+     * @param rarity Rarity level (0=Common, 1=Rare, 2=Epic, 3=Legendary)
+     * @param powerType Element type (0=Fire, 1=Water, 2=Grass)
+     * @param attack Attack stat value of the Monkey
+     * @param health Health stat value of the Monkey
+     * @return uint256 ID of the newly minted Monkey
+     */
     function mintMonkey(
         address to,
         string memory monkeyName,
@@ -239,14 +365,32 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
     }
 
     // Internal functions
+    /**
+     * @notice Returns the base URI for token metadata
+     * @dev Internal function to get the base URI, can be overridden
+     * @return string The base URI string
+     */
     function _baseURI() internal view virtual returns (string memory) {
         return _baseTokenURI;
     }
 
+    /**
+     * @notice Checks if a token ID exists
+     * @dev Internal function to verify token existence
+     * @param tokenId ID of the token to check
+     * @return bool True if the token exists, false otherwise
+     */
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
         return _owners[tokenId] != address(0);
     }
 
+    /**
+     * @notice Checks if an address is the owner or approved for a token
+     * @dev Used internally to validate transfer permissions
+     * @param spender Address to check permissions for
+     * @param tokenId ID of the token to check
+     * @return bool True if spender is owner or approved
+     */
     function _isApprovedOrOwner(
         address spender,
         uint256 tokenId
@@ -257,6 +401,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
             getApproved(tokenId) == spender);
     }
 
+    /**
+     * @notice Internal function to mint a new token
+     * @dev Creates new token and assigns it to recipient
+     * @param to Address to mint token to
+     * @param tokenId ID of the token to mint
+     */
     function _mint(address to, uint256 tokenId) internal virtual {
         require(to != address(0), "ERC 721: mint to zero address");
         require(!_exists(tokenId), "ERC721: token already minted");
@@ -271,6 +421,13 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         _afterTokenTransfer(address(0), to, tokenId);
     }
 
+    /**
+     * @notice Internal function to perform token transfer
+     * @dev Updates balances and ownership mappings
+     * @param from Address to transfer from
+     * @param to Address to transfer to
+     * @param tokenId ID of the token to transfer
+     */
     function _transfer(
         address from,
         address to,
@@ -293,6 +450,14 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         _afterTokenTransfer(from, to, tokenId);
     }
 
+    /**
+     * @notice Safely transfers a token with additional checks
+     * @dev Adds safe transfer checks to normal transfer
+     * @param from Address to transfer from
+     * @param to Address to transfer to
+     * @param tokenId ID of the token to transfer
+     * @param data Additional data to pass to receiver contract
+     */
     function _safeTransfer(
         address from,
         address to,
@@ -306,18 +471,41 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         );
     }
 
+    /**
+     * @notice Hook that is called before any token transfer
+     * @dev Can be overridden to add custom transfer logic
+     * @param from Address tokens are transferred from
+     * @param to Address tokens are transferred to
+     * @param tokenId ID of the token being transferred
+     */
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
     ) internal virtual {}
 
+    /**
+     * @notice Hook that is called after any token transfer
+     * @dev Can be overridden to add custom post-transfer logic
+     * @param from Address tokens are transferred from
+     * @param to Address tokens are transferred to
+     * @param tokenId ID of the token being transferred
+     */
     function _afterTokenTransfer(
         address from,
         address to,
         uint256 tokenId
     ) internal virtual {}
 
+    /**
+     * @notice Checks if a contract can receive ERC721 tokens
+     * @dev Makes sure contract recipients are aware of ERC721 protocol
+     * @param from Address tokens are transferred from
+     * @param to Address tokens are transferred to
+     * @param tokenId ID of the token being transferred
+     * @param data Additional data passed with transfer
+     * @return bool Whether the transfer can proceed
+     */
     function _checkOnERC721Received(
         address from,
         address to,
@@ -350,7 +538,12 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         }
     }
 
-    // Utility function to convert uint to string
+    /**
+     * @notice Converts a uint256 value to its string representation
+     * @dev Internal pure function for number to string conversion
+     * @param value The number to convert
+     * @return string The string representation of the number
+     */
     function toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
             return "0";
@@ -370,13 +563,21 @@ contract Monkeys is ERC165, IERC721, IERC721Metadata, Ownable {
         return string(buffer);
     }
 
+    /**
+     * @notice Retrieves the attributes of a specific Monkey
+     * @dev Returns full Monkey struct with all attributes
+     * @param tokenId ID of the Monkey to query
+     * @return Monkey struct containing all Monkey data
+     */
     function getMonkey(uint256 tokenId) public view returns (Monkey memory) {
         require(_exists(tokenId), "Monkey does not exist");
         return _monkeys[tokenId];
     }
 
     /**
-     * @dev Returns the total number of tokens minted
+     * @notice Gets the total number of Monkeys that have been minted
+     * @dev Returns the current token ID counter value
+     * @return uint256 Total number of minted Monkeys
      */
     function getTotalMinted() public view returns (uint256) {
         return _tokenIdCounter;
