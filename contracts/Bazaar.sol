@@ -353,16 +353,35 @@ contract Bazaar is Ownable {
         uint256 commission = (listing.buyNowPrice * COMMISSION_RATE) / 10000;
         uint256 sellerPayment = listing.buyNowPrice - commission;
 
-        // Transfer payment to seller
+        // Transfer full amount to contract first
         require(
-            monkToken.transferFrom(msg.sender, listing.seller, sellerPayment),
-            "Payment transfer failed"
+            monkToken.transferFrom(
+                msg.sender,
+                address(this),
+                listing.buyNowPrice
+            ),
+            "Full transfer failed"
         );
-        // Transfer commission
+
+        // Explicit transfers with error handling
         require(
-            monkToken.transferFrom(msg.sender, address(this), commission),
+            monkToken.transfer(listing.seller, sellerPayment),
+            "Seller payment transfer failed"
+        );
+        require(
+            monkToken.transfer(address(this), commission),
             "Commission transfer failed"
         );
+        // // Transfer payment to seller
+        // require(
+        //     monkToken.transferFrom(msg.sender, listing.seller, sellerPayment),
+        //     "Payment transfer failed"
+        // );
+        // // Transfer commission
+        // require(
+        //     monkToken.transferFrom(msg.sender, address(this), commission),
+        //     "Commission transfer failed"
+        // );
 
         // Transfer NFT to buyer
         monkeyContract.transferFrom(address(this), msg.sender, tokenId);
