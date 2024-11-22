@@ -1,6 +1,6 @@
 # Monkey Brothers
 <p align="center">
-    <img src="readme_assets/fig1.png" alt="Logo">
+    <img src="assets/fig1.png" alt="Logo">
 </p>
 
 ## Contributors
@@ -66,7 +66,7 @@ Monkey Brothers was inspired by popular games such as Pokemon (For Monkeys’ Ty
 When compared to existing digital pet, fighting or even card games, Monkey Brothers provides greater value to its players because it leverages blockchain technology. Blockchain creates value and longevity for the players’ assets. In traditional online games, players never personally owned their assets and any in-game assets or currency belonged solely to the game’s developers. This means that outside of the game, their assets had no real value and would be lost once the game platform shuts down. With the concept of NFTs, players can own in-platform assets on Monkey Brothers, which can also be transferred across different games and platforms on the blockchain. This creates longevity and value for each player’s in-game assets in Monkey Brothers. With an open economy within the game, it allows players to benefit financially through playing the game. Additionally, We chose GameFi due to its rapid growth and promising future in the gaming industry. The global blockchain in gaming market was valued at USD 4.83 billion in 2022 and is projected to expand at a remarkable compound annual growth rate (CAGR) of 68.3% from 2023 to 2030 [(Grand View Research, 2023)](https://www.grandviewresearch.com/industry-analysis/blockchain-gaming-market-report?ref=blog.bake.io). This strong growth trajectory highlights the increasing potential and innovation in the intersection of blockchain technology and gaming, making GameFi an ideal sector to focus on. Furthermore, as seen in Figure 1, the collectible game sector is experiencing significant growth, underscoring its expanding market potential. This increase in demand for blockchain-based digital assets makes it a strategically sound decision to focus on this sector for Monkey Brothers.
 
 <p align="center">
-    <img src="readme_assets\fig2.png" alt="Figure 2">
+    <img src="assets\fig2.png" alt="Figure 2">
 </p>
 <p align="center">
 Figure 1 : GameFi Industry Market Size
@@ -107,7 +107,7 @@ Refer to Table 1 for a detailed breakdown of the benefits for each stakeholder g
 
 
 <p align="center">
-    <img src="readme_assets\fig3.png" alt="Table 1">
+    <img src="assets\fig3.png" alt="Table 1">
 </p>
 <p align="center">
     Table 1
@@ -138,7 +138,7 @@ The allocation of tokens reflects a balanced approach to fostering community eng
 This structured and forward-thinking tokenomics model aligns the interests of players, developers, and investors, which we identify as our game’s 3 main stakeholders, and ensures the Monkey Brothers ecosystem remains vibrant, balanced, and poised for long-term success.
 
 <p align="center">
-    <img src="readme_assets\fig4.png" alt="Figure 2">
+    <img src="assets\fig4.png" alt="Figure 2">
 </p>
 <p align="center">
 Figure 2 : Monkey Brothers Token Allocation
@@ -152,7 +152,7 @@ By releasing NFTs in limited batches, we aim to create a sense of urgency and ex
 To keep the community informed and engaged, all NFT releases will be announced in advance through social media channels, in-game notifications, and our official website. This communication strategy will not only build anticipation but also foster a sense of community among players eagerly awaiting the next release. 
 
 <p align="center">
-    <img src="readme_assets\fig5.png" alt="Table 2">
+    <img src="assets\fig5.png" alt="Table 2">
 </p>
 <p align="center">
     Table 2
@@ -181,7 +181,7 @@ Figure 3 below illustrates the design elements of a monkey card:
 5. Backstory Description: Each monkey card includes a brief narrative that adds depth to the character, enhancing the gaming experience by providing a backstory that players can connect with, enriching the player's understanding of the monkey's abilities and lore within the game world.
 
 <p align="center">
-    <img src="readme_assets\fig6.png" alt="Figure 3">
+    <img src="assets\fig6.png" alt="Figure 3">
 </p>
 <p align="center">  
 Figure 3 : Design elements of a monkey card
@@ -193,7 +193,7 @@ In the Starter Monkey Pack, each user will receive 3 Common Tier Monkeys, with o
 This approach guarantees that no single Monkey is overwhelmingly powerful or weak, and prevents any one strategy from dominating. Players can encounter Monkeys with higher attack but lower health, or vice versa, depending on how the stats are distributed. This variation promotes strategic decision-making, as players can tailor their choices to fit different playstyles, whether favouring more offensive or defensive Monkeys in battle.
 
 <p align="center">
-    <img src="readme_assets\fig7.png" alt="Table 3">
+    <img src="assets\fig7.png" alt="Table 3">
 </p>
 <p align="center">
 Table 3
@@ -202,7 +202,7 @@ Table 3
 The starter pack features a vibrant jungle-themed design, surrounded by thick vines and leaves, sitting unopened and waiting to be clicked.
 
 <p align="center">
-    <img src="readme_assets\fig8.png" alt="Figure 4">
+    <img src="assets\fig8.png" alt="Figure 4">
 </p>
 <p align="center">  
 Figure 4: Starter Pack Design
@@ -211,7 +211,7 @@ Figure 4: Starter Pack Design
 When the player clicks on the pack, a bright light beam shoots up from the centre, illuminating the jungle background and adding a sense of excitement and anticipation.
 
 <p align="center">
-    <img src="readme_assets\fig9.png" alt="Figure 5">
+    <img src="assets\fig9.png" alt="Figure 5">
 </p>
 <p align="center">  
 Figure 5 : Pack Opening of a Starter Pack
@@ -221,7 +221,7 @@ As the pack opens, the light beam stays brightened, and all three common monkeys
 
 
 <p align="center">
-    <img src="readme_assets\fig10.png" alt="Figure 6">
+    <img src="assets\fig10.png" alt="Figure 6">
 </p>
 <p align="center">  
 Figure 6 : Starter Monkeys received by player
@@ -231,7 +231,7 @@ Figure 6 : Starter Monkeys received by player
 Each of the 3 Monkey Types are weak to one Type, while being strong against another. When a Monkey’s Type is strong against its Target, it will deal 125% of its ATK value to its target. When a Monkey’s Type is weak against its Target, it will deal 80% of its ATK value to its target. The specific type advantages are labelled in Table 4 below. 
 
 <p align="center">
-    <img src="readme_assets\fig12.png" alt="Table 4">
+    <img src="assets\fig12.png" alt="Table 4">
 </p>
 <p align="center">
     Table 4
@@ -240,7 +240,7 @@ Each of the 3 Monkey Types are weak to one Type, while being strong against anot
 Monkey cards can be of different types, each looking visually distinct from one another, from the colour of the card to the symbols that show the monkey’s typings. Figure 7 provides clear visual differentiation between the types and makes it easy to distinguish them at a glance.
 
 <p align="center">
-    <img src="readme_assets\fig11.png" alt="Figure 7">
+    <img src="assets\fig11.png" alt="Figure 7">
 </p>
 <p align="center">  
 Figure 7: Same Tier Monkeys
@@ -249,7 +249,7 @@ Figure 7: Same Tier Monkeys
 In contrast, monkey cards can also be of different tiers within the same type. Higher-tier cards retain the same type-specific design but feature enhanced visuals and better stats, making it easy to identify stronger cards within the same type. The tier of the card is also further specified at the bottom of each card. Figure 8 provides clear visual differentiation between the tiers.
 
 <p align="center">
-    <img src="readme_assets\fig13.png" alt="Figure 8">
+    <img src="assets\fig13.png" alt="Figure 8">
 </p>
 <p align="center">  
 Figure 8: Same Type Monkeys
@@ -259,7 +259,7 @@ Figure 8: Same Type Monkeys
 The Home Screen serves as the central hub of Monkey Brothers, providing quick access to all key sections of the game. Players can view their current MONKS token balance, track their progress through the XP bar, and navigate seamlessly to other game pages. This intuitive design ensures players can manage their in-game resources and progression efficiently while staying engaged in the gameplay experience.
 
 <p align="center">
-    <img src="readme_assets\fig14.png" alt="Figure 9">
+    <img src="assets\fig14.png" alt="Figure 9">
 </p>
 <p align="center">  
 Figure 9: Home Screen of Monkey Brothers
@@ -290,7 +290,7 @@ The Monkey Draw is a Gacha system where players can obtain new Monkeys. Players 
 
 
 <p align="center">
-    <img src="readme_assets\fig15.png" alt="Table 5">
+    <img src="assets\fig15.png" alt="Table 5">
 </p>
 <p align="center">
 Table 5
@@ -302,7 +302,7 @@ Table 5
 Players can participate in a PVP Arena with their Monkeys to earn XP for their accounts. Players would need to admit exactly 3 Monkeys to participate in the Arena, and would be matched with another player with similar XP level. Before entering the Arena, players must decide the order in which they want to send out their Monkeys because the order will be fixed once the Arena battle has started. Once selected, the monkey will be blocked from reselection. If players wish to replace the monkeys, they will do so by tapping on the card to swap out the ones in the lineup.
 
 <p align="center">
-    <img src="readme_assets\fig16.png" alt="Figure 10">
+    <img src="assets\fig16.png" alt="Figure 10">
 </p>
 <p align="center">  
 Figure 10: Choosing Your Monkeys
@@ -320,29 +320,29 @@ If both players happen to knock out the opponent’s Monkeys in the same turn, t
 
 ## System Illustration
 <p align="center">
-    <img src="readme_assets\fig17.png" alt="System Architecture">
+    <img src="assets\fig17.png" alt="System Architecture">
 </p>
 
 ## Use case diagram
 <p align="center">
-    <img src="readme_assets\fig18.png" alt="Use case diagram">
+    <img src="assets\fig18.png" alt="Use case diagram">
 </p>
 
 ## User Diagram
 
 ### Battle Arena User Flow
 <p align="center">
-    <img src="readme_assets\fig19.png" alt="Battle Arena User Flow diagram">
+    <img src="assets\fig19.png" alt="Battle Arena User Flow diagram">
 </p>
 
 ### Monkey Bazaar User Flow
 <p align="center">
-    <img src="readme_assets\fig20.png" alt="Monkey Bazaar User Flow diagram">
+    <img src="assets\fig20.png" alt="Monkey Bazaar User Flow diagram">
 </p>
 
 ### Monkey Draw User Flow
 <p align="center">
-    <img src="readme_assets\fig21.png" alt="Monkey Draw User Flow diagram">
+    <img src="assets\fig21.png" alt="Monkey Draw User Flow diagram">
 </p>
 
 # Analysis
