@@ -16,9 +16,9 @@ contract("Bazaar", (accounts) => {
     let initialMonkBalance;
     const PRICE_BASE = "10";
     const START_BID = "1";
-    const PRICE_IN_WEI = web3.utils.toWei(PRICE_BASE, "ether"); // 10 MONK
-    const START_BID_IN_WEI = web3.utils.toWei(START_BID, "ether"); // 1 MONK
-    let player1TokenIds = []; // Array to store player1's token IDs
+    const PRICE_IN_WEI = web3.utils.toWei(PRICE_BASE, "ether"); 
+    const START_BID_IN_WEI = web3.utils.toWei(START_BID, "ether"); 
+    let player1TokenIds = []; 
 
     before(async () => {
         monkInstance = await Monk.deployed();
@@ -30,7 +30,7 @@ contract("Bazaar", (accounts) => {
 
         await monkInstance.getMonks({
             from: player1,
-            value: web3.utils.toWei("1", "ether"), //1000 MONK
+            value: web3.utils.toWei("1", "ether"), 
         });
         await monkInstance.getMonks({
             from: player2,
@@ -136,7 +136,7 @@ contract("Bazaar", (accounts) => {
         });
 
         it("should allow placing a valid bid", async () => {
-            const bidAmount = web3.utils.toWei("2", "ether"); // 2 MONK
+            const bidAmount = web3.utils.toWei("2", "ether"); 
             const result = await bazaarInstance.placeBid(player1TokenIds[0], bidAmount, {from: player2});
 
             truffleAssert.eventEmitted(result, "BidPlaced", (ev) => {
@@ -149,7 +149,7 @@ contract("Bazaar", (accounts) => {
         });
 
         it("should fail bid below starting price", async () => {
-            const lowBid = web3.utils.toWei("0.5", "ether"); // 0.5 MONK
+            const lowBid = web3.utils.toWei("0.5", "ether"); 
             await truffleAssert.reverts(
                 bazaarInstance.placeBid(player1TokenIds[0], lowBid, {
                     from: player3,
@@ -159,7 +159,7 @@ contract("Bazaar", (accounts) => {
         });
 
         it("should fail bid below current highest bid", async () => {
-            const lowBid = web3.utils.toWei("1.5", "ether"); // 1.5 MONK
+            const lowBid = web3.utils.toWei("1.5", "ether"); 
             await truffleAssert.reverts(
                 bazaarInstance.placeBid(player1TokenIds[0], lowBid, {
                     from: player3,
@@ -170,7 +170,7 @@ contract("Bazaar", (accounts) => {
 
         it("should return previous bid when outbid", async () => {
             const player2InitialBalance = await monkInstance.balanceOf(player2);
-            const higherBid = web3.utils.toWei("3", "ether"); // 3 MONK
+            const higherBid = web3.utils.toWei("3", "ether"); 
 
             await bazaarInstance.placeBid(player1TokenIds[0], higherBid, {
                 from: player3,

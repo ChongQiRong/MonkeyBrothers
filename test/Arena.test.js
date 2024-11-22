@@ -20,6 +20,7 @@ contract("Arena", (accounts) => {
     let player1Monkeys = [];
     let player2Monkeys = [];
 
+    // 1 ETH = 1000 MONK
     before(async () => {
         monkInstance = await Monk.deployed();
         monkeysInstance = await Monkeys.deployed();
@@ -55,8 +56,9 @@ contract("Arena", (accounts) => {
     describe("Battle Mechanics", () => {
         it("should allow a player to battle another player", async () => {
             // Check initial monk balance for player 1
-            const player1MonkBalance = await monkInstance.checkMonksOf(player1);
-            const player2MonkBalance = await monkInstance.checkMonksOf(player2);
+            const player1InitialMonkBalance = await monkInstance.checkMonksOf(player1);
+            // Check initial monk balance for player 2
+            const player2InitialMonkBalance = await monkInstance.checkMonksOf(player2);
             await monkInstance.getMonks({from: player1, value: ethAmount});
             await monkInstance.giveMonkApproval(arenaInstance.address, 1000, {
                 from: player1,
@@ -76,8 +78,8 @@ contract("Arena", (accounts) => {
             try {
                 // Check that either player 1 or player 2 monk balance has increased
                 assert(
-                    player1FinalMonkBalance.toString() > player1MonkBalance.toString() ||
-                        player2FinalMonkBalance.toString() > player2MonkBalance.toString(),
+                    player1FinalMonkBalance.toString() > player1InitialMonkBalance.toString() ||
+                        player2FinalMonkBalance.toString() > player2InitialMonkBalance.toString(),
                     "Monk balance should have increased"
                 );
                 truffleAssert.eventEmitted(result, "outcomeWin", (ev) => {

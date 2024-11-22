@@ -6,6 +6,7 @@ contract("Monk Token", (accounts) => {
     let monkInstance;
     const [owner, player1, player2] = accounts;
 
+    // 1 ETH = 1000 MONK
     before(async () => {
         monkInstance = await Monk.deployed();
     });
@@ -18,7 +19,7 @@ contract("Monk Token", (accounts) => {
 
         it("Get MONK with ETH", async () => {
             const ethAmount = web3.utils.toWei("1", "ether");
-            const expectedMonks = 1000; // 1 ETH = 1000 MONK
+            const expectedMonks = 1000; 
 
             await monkInstance.getMonks({from: accounts[1], value: ethAmount});
             const balance = await monkInstance.checkMonks.call({from: accounts[1]});

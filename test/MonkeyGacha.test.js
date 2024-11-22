@@ -12,6 +12,7 @@ contract("Monkey Gacha", (accounts) => {
 
     const [owner, player1, player2] = accounts;
 
+    // 1 ETH = 1000 MONK
     before(async () => {
         monkInstance = await Monk.deployed();
         monkeysInstance = await Monkeys.deployed();
