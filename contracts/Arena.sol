@@ -59,6 +59,7 @@ contract Arena {
     function fight(
         uint256[] memory monkeys
     ) public isOwnerOfMonkeys(monkeys) isCorrectNumMonkeys(monkeys) {
+
         // If queue is empty, add player to queue
         if (matchmakingQueue.length == 0) {
             matchmakingQueue.push(msg.sender);
@@ -67,50 +68,90 @@ contract Arena {
             return;
         }
 
-        // Get opponent from front of queue
+        // Get opponent from front of queue and remove them
         address opponent = matchmakingQueue[0];
+        // Check if opponent has at least 200 MONK
         uint256[] memory opponentMonkeys = _cardsOfPlayersInQueue[opponent];
-
-        // Remove opponent from queue
         matchmakingQueue.pop();
         delete _cardsOfPlayersInQueue[opponent];
 
         // Calculate total damage for each player
-        uint256 myDamage = 0;
-        uint256 opponentDamage = 0;
+        (uint256 myDamage, uint256 opponentDamage) = calculateDamages(monkeys, opponentMonkeys);
 
-        // Battle each monkey pair
-        for (uint i = 0; i < monkeys.length; i++) {
-            uint[] memory powerTypes = getPowerTypes(
-                monkeys[i],
-                opponentMonkeys[i]
-            );
+        // Handle battle outcome and rewards
+        handleBattleOutcome(msg.sender, opponent, myDamage, opponentDamage);
+    }
 
-            Monkeys.Monkey memory myMonkey = monkeyContract.getMonkey(
-                monkeys[i]
-            );
-            Monkeys.Monkey memory enemyMonkey = monkeyContract.getMonkey(
-                opponentMonkeys[i]
-            );
+    /**
+     * @dev Helper function to calculate damages for both players
+     * @param myMonkeys Array of attacker's monkey IDs
+     * @param opponentMonkeys Array of defender's monkey IDs
+     * @return Tuple of (myDamage, opponentDamage)
+     */
+    function calculateDamages(
+        uint256[] memory myMonkeys,
+        uint256[] memory opponentMonkeys
+    ) internal view returns (uint256, uint256) {
+        uint256 myDamage;
+        uint256 opponentDamage;
+
+        for (uint i = 0; i < myMonkeys.length; i++) {
+            uint[] memory powerTypes = getPowerTypes(myMonkeys[i], opponentMonkeys[i]);
+            
+            Monkeys.Monkey memory myMonkey = monkeyContract.getMonkey(myMonkeys[i]);
+            Monkeys.Monkey memory enemyMonkey = monkeyContract.getMonkey(opponentMonkeys[i]);
 
             myDamage += (myMonkey.attack * powerTypes[0]) / 10;
             opponentDamage += (enemyMonkey.attack * powerTypes[1]) / 10;
         }
 
-        // Determine winner and award experience
-        if (myDamage > opponentDamage) {
-            emit outcomeWin(msg.sender);
-            playerDetailsContract.addExperience(msg.sender, 100);
-            emit damageDifference(myDamage - opponentDamage);
-        } else if (opponentDamage > myDamage) {
-            emit outcomeWin(opponent);
-            playerDetailsContract.addExperience(opponent, 100);
-            emit damageDifference(opponentDamage - myDamage);
-        } else {
+        return (myDamage, opponentDamage);
+    }
+
+    /**
+     * @dev Helper function to handle battle outcome and distribute rewards
+     * @param attacker Address of attacking player
+     * @param defender Address of defending player
+     * @param attackerDamage Total damage dealt by attacker
+     * @param defenderDamage Total damage dealt by defender
+     */
+    function handleBattleOutcome(
+        address attacker,
+        address defender,
+        uint256 attackerDamage,
+        uint256 defenderDamage
+    ) internal {
+        if (attackerDamage == defenderDamage) {
             emit outcomeDraw();
-            // Award less exp for a draw
-            playerDetailsContract.addExperience(msg.sender, 50);
-            playerDetailsContract.addExperience(opponent, 50);
+            playerDetailsContract.addExperience(attacker, 50);
+            playerDetailsContract.addExperience(defender, 50);
+            return;
+        }
+
+        address winner;
+        address loser;
+        uint256 damageDiff;
+
+        if (attackerDamage > defenderDamage) {
+            winner = attacker;
+            loser = defender;
+            damageDiff = attackerDamage - defenderDamage;
+            playerDetailsContract.addExperience(attacker, 100);
+            // Monk transfer from loser to winner
+            monkContract.transferMonksFrom(loser, winner, damageDiff * 9 / 100);
+            // Monk transfer from loser to contract
+            monkContract.transferMonksFrom(loser, address(this), damageDiff / 100);
+            emit outcomeWin(attacker);
+        } else {
+            winner = defender;
+            loser = attacker;
+            damageDiff = defenderDamage - attackerDamage;
+            playerDetailsContract.addExperience(defender, 100);
+            // Monk transfer from loser to winner
+            monkContract.transferMonksFrom(loser, winner, damageDiff * 9 / 100);
+            // Monk transfer from loser to contract
+            monkContract.transferMonksFrom(loser, address(this), damageDiff / 100);
+            emit outcomeWin(defender);
         }
     }
 

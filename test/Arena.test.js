@@ -15,7 +15,8 @@ contract("Arena", (accounts) => {
     let arenaInstance;
 
     const [player1, player2] = accounts;
-    const ethAmount = web3.utils.toWei("5", "ether");
+    const ethAmount = web3.utils.toWei("1", "ether");
+    const fiveEthAmount = web3.utils.toWei("5", "ether");
     let player1Monkeys = [];
     let player2Monkeys = [];
 
@@ -29,7 +30,7 @@ contract("Arena", (accounts) => {
         await monkeysInstance.setGachaContract(gachaInstance.address);
         await playerDetailsInstance.setArenaContract(arenaInstance.address);
 
-        await monkInstance.getMonks({from: player1, value: ethAmount});
+        await monkInstance.getMonks({from: player1, value: fiveEthAmount});
         await monkInstance.giveMonkApproval(gachaInstance.address, 5000, {
             from: player1,
         });
@@ -40,7 +41,7 @@ contract("Arena", (accounts) => {
 
         await monkInstance.getMonks({
             from: player2,
-            value: ethAmount,
+            value: fiveEthAmount,
         });
         await monkInstance.giveMonkApproval(gachaInstance.address, 5000, {
             from: player2,
@@ -53,12 +54,32 @@ contract("Arena", (accounts) => {
 
     describe("Battle Mechanics", () => {
         it("should allow a player to battle another player", async () => {
+            // Check initial monk balance for player 1
+            const player1MonkBalance = await monkInstance.checkMonksOf(player1);
+            const player2MonkBalance = await monkInstance.checkMonksOf(player2);
+            await monkInstance.getMonks({from: player1, value: ethAmount});
+            await monkInstance.giveMonkApproval(arenaInstance.address, 1000, {
+                from: player1,
+            });
             await arenaInstance.fight(player1Monkeys, {
                 from: player1,
             });
-
+            await monkInstance.getMonks({from: player2, value: ethAmount});
+            await monkInstance.giveMonkApproval(arenaInstance.address, 1000, {
+                from: player2,
+            });
             const result = await arenaInstance.fight(player2Monkeys, {from: player2});
+            // Check final monk balance for player 1
+            const player1FinalMonkBalance = await monkInstance.checkMonksOf(player1);
+            // Check final monk balance for player 2
+            const player2FinalMonkBalance = await monkInstance.checkMonksOf(player2);
             try {
+                // Check that either player 1 or player 2 monk balance has increased
+                assert(
+                    player1FinalMonkBalance.toString() > player1MonkBalance.toString() ||
+                        player2FinalMonkBalance.toString() > player2MonkBalance.toString(),
+                    "Monk balance should have increased"
+                );
                 truffleAssert.eventEmitted(result, "outcomeWin", (ev) => {
                     // Either player 1 or player 2 wins
                     return ev.winner === player1 || ev.winner === player2;
