@@ -158,7 +158,7 @@ To keep the community informed and engaged, all NFT releases will be announced i
     Table 2
 </p>
 
-## 1.5 Gameplay Logic
+## Gameplay Logic
 
 ### Obtaining Monkeys
 New players can purchase a Starter Monkey Pack by exchanging 5 Tokens, which will provide them with the 3 Starter Monkeys. All players who purchase this Starter Monkey Pack will receive 3 Common Tier Monkeys, one of each Type, with unique Attack Values(ATK) and Health Values(HP). Players can obtain other Monkeys through The Monkey Bazaar or The Monkey Draw using Tokens.
@@ -322,10 +322,16 @@ If both players happen to knock out the opponent’s Monkeys in the same turn, t
 <p align="center">
     <img src="assets\fig17.png" alt="System Architecture">
 </p>
+<p align="center">
+Figure 11: UML Design of System Illustration     
+</p>
 
 ## Use case diagram
 <p align="center">
     <img src="assets\fig18.png" alt="Use case diagram">
+</p>
+<p align="center">
+Figure 12: Use Cases Diagram   
 </p>
 
 ## User Diagram
@@ -334,24 +340,131 @@ If both players happen to knock out the opponent’s Monkeys in the same turn, t
 <p align="center">
     <img src="assets\fig19.png" alt="Battle Arena User Flow diagram">
 </p>
+<p align="center">
+Figure 13: Battle Arena User Flow
+</p>
 
 ### Monkey Bazaar User Flow
 <p align="center">
     <img src="assets\fig20.png" alt="Monkey Bazaar User Flow diagram">
+</p>
+<p align="center">
+Figure 14: Monkey Bazaar User Flow
 </p>
 
 ### Monkey Draw User Flow
 <p align="center">
     <img src="assets\fig21.png" alt="Monkey Draw User Flow diagram">
 </p>
+<p align="center">
+Figure 15: Monkey Draw User Flow
+</p>
 
 # Analysis
 
 ## Technical Features
 
+### Monk Token ($MK)
+
+#### ERC20 Implementation
+The MONK token is implemented as an ERC20 with a maximum supply of 1 Million MK Tokens.
+
+#### Denomination
+All token operations are handled at a scale of 1e18 so that when deployed on testnet or mainnet, 1 MONK is displayed as 1 MK instead of 0.000000000000000001 MK.
+
+#### MONK Functions
+The contract includes helper functions that automatically handle denomination conversion, making it intuitive for other contracts and users to interact with proper token amounts:
+- `getMonks()`: Allows minting MONK with ETH at 1:1000 ratio
+- `checkMonks()`: Returns balance in standard denomination	
+- `transferMonks()`: Handles transfers with automatic denomination conversion
+
+#### Mint, Allowance and Transfer
+Users can mint tokens by supplying ETH, provide approval for other addresses to spend their MONK tokens, and transfer tokens either directly or through approved contracts.
+
+### Monkeys
+
+#### ERC721 Implementation
+Monkeys contract implements the ERC721 standard with metadata extensions for NFT functionality.
+
+#### On-chain Attributes
+Each Monkey NFT has a comprehensive attribute system consisting of combat stats (attack, health), rarity level (Common, Rare, Epic, Legendary), and power type (Fire, Water, Grass). The stats are generated within rarity-specific ranges during minting, with rarer Monkeys having access to higher stat ranges. The power type affects battle mechanics through a rock-paper-scissors style advantage system.
+
+#### Storage of Monkey metadata
+<p align="center">
+    <img src="assets\fig22.png" alt="Storage of Monkey metadata">
+</p>
+<p align="center">
+Figure 16: Pinata user interface to store metadata
+</p>
+Monkey metadata has to be stored on IPFS using Pinata so the data can be queried for buyers and sellers to know the attributes and determine its value. The metadata (except for the image) also has to be stored on-chain so that Arena contract can perform game logic with it. Otherwise, an oracle would have to be used to query data from IPFS to perform game logic.<br>
+<br>
+
+[Link to MonkeyCard NFT metadata on IFPS](https://cyan-known-squid-368.mypinata.cloud/ipfs/QmQD4de2p6fTAFD3RjCh6i2bUR7SQNRvjPpa9388U2drtj)
+
+#### Minting
+As this contract is meant to be interacted through a front end, users do not have to manually input their address and NFT metadata into the mint function. The javascript will query the metadata from IPFS API to instantiate the card with the corresponding metadata to the user’s address, these data are stored in mappings and Monkey structure.
+
+#### Approval
+Users can give approval to another address to transfer one or all of their NFTs. This is meant for Gacha and the Monkey Bazaar to transfer sold NFTs without having to first transfer ownership of the NFT to the intermediary to list them.
+
+#### Transfer
+Transfer of NFTs should use the safeTransfer functions in Monkeys smart contract to prevent the NFT from being transferred to an incompatible wallet address and become lost.
+
+### Gacha System
+
+#### Minting
+The MonkeyGacha contract manages the random generation and distribution of Monkey NFTs through a designed probability system. Players spend MONK tokens to participate in either single draws or starter pack claims. The contract maintains strict rarity distributions with Common (55%), Rare (25%), Epic (15%), and Legendary (5%) probabilities, ensuring game balance while preserving the value of rarer Monkeys.
+
+#### Stat Generation Algorithm 
+Each Monkey's stats are generated within rarity-specific ranges defined in StatRange structs. The algorithm ensures higher rarity Monkeys have access to better stat ranges while maintaining balance. For example, Legendary Monkeys have attack ranges of 26-35 and health ranges of 85-94, while Commons are limited to 5-15 attack and 40-50 health.
+
+#### Name Generation
+The contract implements a sophisticated name generation system using type-specific name pools. Names are generated by combining random first and last names from pools corresponding to the Monkey's power type (Fire, Water, Grass). This ensures thematically appropriate names while maintaining variety and uniqueness.
+
+#### Starter Pack System
+New players can claim a starter pack containing three Monkeys of different power types. The system ensures a balanced starting experience by providing one of each power type with moderate stats. This mechanism requires a higher MONK token cost but guarantees a viable starting collection for new players.
+
+### Arena System
+
+#### Matchmaking Queue
+The Arena implements a first-in-first-out matchmaking system where players enter a queue system for matchmaking. If the queue is empty, the player joins the queue. If queue has a player, immediate match is created
+
+#### Combat Resolution
+The battle system implements a strategic layer through its power type advantage system. The isEffectiveAgainst function manages a circular advantage pattern where Fire dominates Grass, Grass overcomes Water, and Water defeats Fire. When a Monkey’s type is effective to another Monkey’s type, the former will have its AP and HP buffed by 20%, while the latter will remain constant. During battle execution, the getPowerTypes function calculates and applies these advantages as power multipliers. Battles proceed sequentially through matched Monkey pairs, with the system tracking cumulative damage points to determine the victor. 
+
+#### Reward system
+Victory in battle yields tangible rewards, with winners receiving 100 experience points through integration with the PlayerDetails contract. In cases of draws, both participants receive 50 experience points, ensuring fair compensation for evenly matched encounters. 
+
+#### Calculation of Rewards
+Based on the difference in damage dealt to each team, the winner of the fight will be the team that dealt more damage to the opponent. The amount of monks that the loser loses will be the damage difference divided by 100. Of which, 90% will go to the winner of the fight and 10% will go to the Fight contract as a form of commission fee.
+
+### Bazaar Marketplace
+
+#### Marketplace Infrastructure
+The Bazaar contract implements a sophisticated marketplace for trading Monkey NFTs, offering both fixed-price listings and auction mechanisms. The contract leverages a 2% commission structure (200 basis points) for all successful trades, with auctions running for a fixed duration of 12 hours to ensure fair participation opportunities.
+
+#### Listing Management
+The marketplace enables Monkey owners to list their NFTs with multiple selling options. Through the listMonkey function, sellers can set both a buy-now price and a starting bid price, with the requirement that starting bids must be lower than the buy-now price. The contract securely holds listed NFTs in escrow, verifying proper approvals before accepting listings. A robust event system tracks all listing activities, emitting detailed information about new listings, price changes, and delistings.
+
+#### Trading Mechanisms
+For buyers, the Bazaar offers multiple ways to acquire Monkeys. The buyNow function enables immediate purchases at listed prices, while the placeBid function supports auction participation. The bidding system includes automatic refunds for outbid participants and proper validation of bid amounts. Special care is taken to handle edge cases, such as ensuring bids are higher than current highest bids and preventing sellers from bidding on their own listings.
+
+#### Market Metrics
+The contract maintains comprehensive market statistics through its MarketMetrics struct, tracking crucial indicators such as total trading volume, floor price, highest current offer, percentage of total Monkeys listed, and unique owner count. These metrics are updated in real-time as trading occurs, providing valuable market insights for participants. The _updateMetrics function ensures accurate calculation and event emission for these statistics.
+
+### Player Details and Progression
+
+#### Experience System
+The system implements a level progression mechanism where players start at level 1 and can advance up to a maximum level of 100. Experience points are awarded through battle participation, with the addExperience function handling both initial player setup and subsequent experience gains. The contract automatically processes level-ups when sufficient experience is accumulated, with each new level requiring incrementally more experience points (calculated as level * 100).
+
+#### Progress Tracking 
+The contract provides comprehensive player data access through various query functions. getPlayerLevel and getPlayerExp offer basic stat access, while getPlayerData returns complete progression information. Additional utility functions like isMaxLevel and expToNextLevel help frontend interfaces present relevant progression information to players.
+
+
 ## Market Differentiation
+
 ### Low Barrier of Entry
-Monkey Brothers stands out by offering a low barrier to entry, with minimal upfront investment required and a clean, user-friendly interface that makes gameplay easy to understand and enjoy. Unlike many games that feature complex mechanics and steep learning curves, Monkey Brothers is designed to be accessible to new players, gradually introducing blockchain elements as users become more comfortable with the game. This makes it easier for players to learn at their own pace without feeling overwhelmed (Mangalindan, 2023).
+Monkey Brothers stands out by offering a low barrier to entry, with minimal upfront investment required and a clean, user-friendly interface that makes gameplay easy to understand and enjoy. Unlike many games that feature complex mechanics and steep learning curves, Monkey Brothers is designed to be accessible to new players, gradually introducing blockchain elements as users become more comfortable with the game. This makes it easier for players to learn at their own pace without feeling overwhelmed [(Mangalindan, 2023)](https://hackernoon.com/how-blockchain-gaming-can-break-the-adoption-barrier-for-new-users).
 
 In addition, Monkey Brothers promotes inclusivity by providing low-cost options for players who may not want to invest heavily upfront. Through mechanisms that allow players to earn or receive initial in-game assets without significant financial commitment, Monkey Brothers ensures that financial barriers don't prevent potential players from joining the game and enjoying the experience. This approach sets Monkey Brothers apart by prioritising accessibility, making it easy for anyone to get started and progressively build their in-game assets.
 
